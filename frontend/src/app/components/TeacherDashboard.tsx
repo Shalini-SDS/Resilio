@@ -18,6 +18,7 @@ import {
 import { GlassCard } from './GlassCard';
 import { TabNavigation } from './TabNavigation';
 import { ChartCard } from './ChartCard';
+import { ChatComponent } from './ChatComponent';
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
 interface TeacherDashboardProps {
@@ -864,66 +865,11 @@ export function TeacherDashboard({ onLogout }: TeacherDashboardProps) {
               <div className="grid lg:grid-cols-3 gap-6">
                 {/* AI Chat Interface */}
                 <div className="lg:col-span-2">
-                  <GlassCard>
-                    <div className="p-6">
-                      <h3 className="text-[#e8e6e1] font-semibold mb-4 flex items-center gap-2">
-                        <Bot className="w-5 h-5 text-[#FFD600]" />
-                        AI Teaching Assistant
-                      </h3>
-
-                      <div className="h-96 bg-[#1a1a1a] rounded-xl p-4 mb-4 overflow-y-auto">
-                        <div className="space-y-4">
-                          <div className="flex gap-3">
-                            <div className="w-8 h-8 rounded-full bg-[#FFD600] flex items-center justify-center flex-shrink-0">
-                              <Bot className="w-4 h-4 text-black" />
-                            </div>
-                            <div className="bg-[#2a2a2a] rounded-lg p-3 max-w-xs">
-                              <p className="text-[#e8e6e1] text-sm">Hello! I'm your AI teaching assistant. How can I help you with your teaching today?</p>
-                            </div>
-                          </div>
-
-                          <div className="flex gap-3 justify-end">
-                            <div className="bg-[#FFD600] rounded-lg p-3 max-w-xs">
-                              <p className="text-black text-sm">Help me create a quiz for calculus</p>
-                            </div>
-                            <div className="w-8 h-8 rounded-full bg-[#FFD600] flex items-center justify-center flex-shrink-0">
-                              <User className="w-4 h-4 text-black" />
-                            </div>
-                          </div>
-
-                          <div className="flex gap-3">
-                            <div className="w-8 h-8 rounded-full bg-[#FFD600] flex items-center justify-center flex-shrink-0">
-                              <Bot className="w-4 h-4 text-black" />
-                            </div>
-                            <div className="bg-[#2a2a2a] rounded-lg p-3">
-                              <p className="text-[#e8e6e1] text-sm">I'd be happy to help you create a calculus quiz! Here are some suggestions:</p>
-                              <div className="mt-2 space-y-2">
-                                <div className="bg-[#1a1a1a] rounded p-2">
-                                  <p className="text-[#FFD600] text-sm font-medium">Question 1: Derivatives</p>
-                                  <p className="text-[#a8a6a1] text-xs">Find the derivative of f(x) = x³ + 2x² - 5x + 1</p>
-                                </div>
-                                <div className="bg-[#1a1a1a] rounded p-2">
-                                  <p className="text-[#FFD600] text-sm font-medium">Question 2: Applications</p>
-                                  <p className="text-[#a8a6a1] text-xs">A particle moves with velocity v(t) = 3t² - 6t. Find position at t=2s.</p>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex gap-3">
-                        <input
-                          type="text"
-                          placeholder="Ask me anything about teaching, lesson planning, or student assessment..."
-                          className="flex-1 bg-[#1a1a1a] text-[#e8e6e1] rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#FFD600]"
-                        />
-                        <button className="btn-3d bg-[#FFD600] text-black font-semibold py-3 px-6 rounded-lg hover:bg-[#FFD600]/90 transition-colors">
-                          Send
-                        </button>
-                      </div>
-                    </div>
-                  </GlassCard>
+                  <ChatComponent
+                    title="AI Teaching Assistant"
+                    placeholder="Ask me anything about teaching, lesson planning, or student assessment..."
+                    role="teacher"
+                  />
                 </div>
 
                 {/* Quick Actions & Features */}

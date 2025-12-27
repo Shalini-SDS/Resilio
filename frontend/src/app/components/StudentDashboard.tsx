@@ -20,6 +20,7 @@ import {
 import { GlassCard } from './GlassCard';
 import { TabNavigation } from './TabNavigation';
 import { ChartCard } from './ChartCard';
+import { ChatComponent } from './ChatComponent';
 import { LineChart, Line, AreaChart, Area, BarChart, Bar, RadarChart, PolarGrid, PolarAngleAxis, Radar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 interface StudentDashboardProps {
@@ -551,59 +552,13 @@ export function StudentDashboard({ onLogout }: StudentDashboardProps) {
               <div className="grid lg:grid-cols-3 gap-6">
                 {/* Chat Interface */}
                 <div className="lg:col-span-2">
-                  <GlassCard>
-                    <div className="p-6">
-                      <h3 className="text-[#e8e6e1] font-semibold mb-4 flex items-center gap-2">
-                        <Bot className="w-5 h-5 text-[#FFD600]" />
-                        AI Study Assistant
-                      </h3>
-                      
-                      <div className="h-96 bg-[#1a1a1a] rounded-xl p-4 mb-4 overflow-y-auto">
-                        <div className="space-y-4">
-                          <div className="flex gap-3">
-                            <div className="w-8 h-8 rounded-full bg-[#FFD600] flex items-center justify-center flex-shrink-0">
-                              <Bot className="w-4 h-4 text-black" />
-                            </div>
-                            <div className="bg-[#2a2a2a] rounded-lg p-3 max-w-xs">
-                              <p className="text-[#e8e6e1] text-sm">Hello! I'm your AI study assistant. How can I help you with your learning today?</p>
-                            </div>
-                          </div>
-                          
-                          <div className="flex gap-3 justify-end">
-                            <div className="bg-[#FFD600] rounded-lg p-3 max-w-xs">
-                              <p className="text-black text-sm">Can you explain derivatives in calculus?</p>
-                            </div>
-                            <div className="w-8 h-8 rounded-full bg-[#FFD600] flex items-center justify-center flex-shrink-0">
-                              <User className="w-4 h-4 text-black" />
-                            </div>
-                          </div>
-                          
-                          <div className="flex gap-3">
-                            <div className="w-8 h-8 rounded-full bg-[#FFD600] flex items-center justify-center flex-shrink-0">
-                              <Bot className="w-4 h-4 text-black" />
-                            </div>
-                            <div className="bg-[#2a2a2a] rounded-lg p-3">
-                              <p className="text-[#e8e6e1] text-sm">A derivative measures how a function changes as its input changes. For a function f(x), the derivative f'(x) represents the instantaneous rate of change at point x.</p>
-                              <p className="text-[#e8e6e1] text-sm mt-2">For example, if f(x) = x², then f'(x) = 2x. This means at x=3, the function is changing at a rate of 6 units per unit change in x.</p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="flex gap-3">
-                        <input
-                          type="text"
-                          placeholder="Ask me anything about your studies..."
-                          className="flex-1 bg-[#1a1a1a] text-[#e8e6e1] rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#FFD600]"
-                        />
-                        <button className="btn-3d bg-[#FFD600] text-black font-semibold py-3 px-6 rounded-lg hover:bg-[#FFD600]/90 transition-colors">
-                          Send
-                        </button>
-                      </div>
-                    </div>
-                  </GlassCard>
+                  <ChatComponent
+                    title="AI Study Assistant"
+                    placeholder="Ask me anything about your studies..."
+                    role="student"
+                  />
                 </div>
-                
+
                 {/* Quick Actions */}
                 <div className="space-y-6">
                   <GlassCard>
@@ -624,7 +579,7 @@ export function StudentDashboard({ onLogout }: StudentDashboardProps) {
                       </div>
                     </div>
                   </GlassCard>
-                  
+
                   <GlassCard>
                     <div className="p-6">
                       <h4 className="text-[#e8e6e1] font-semibold mb-4">Study Stats</h4>

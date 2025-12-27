@@ -2,12 +2,15 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { LandingPage } from './components/LandingPage';
 import { LoginPage } from './components/LoginPage';
+import { StudentLogin } from './components/StudentLogin';
+import { TeacherLogin } from './components/TeacherLogin';
+import { AdminLogin } from './components/AdminLogin';
 import { StudentDashboard } from './components/StudentDashboard';
 import { TeacherDashboard } from './components/TeacherDashboard';
 import { AdminDashboard } from './components/AdminDashboard';
 import { GlitterEffect } from './components/GlitterEffect';
 
-type View = 'landing' | 'login' | 'student' | 'teacher' | 'admin';
+type View = 'landing' | 'login' | 'student-login' | 'teacher-login' | 'admin-login' | 'student' | 'teacher' | 'admin';
 type Role = 'student' | 'teacher' | 'admin' | null;
 
 export default function App() {
@@ -20,9 +23,20 @@ export default function App() {
 
   const handleRoleSelect = (role: Role) => {
     setUserRole(role);
-    if (role === 'student') setCurrentView('student');
-    if (role === 'teacher') setCurrentView('teacher');
-    if (role === 'admin') setCurrentView('admin');
+    if (role === 'student') setCurrentView('student-login');
+    if (role === 'teacher') setCurrentView('teacher-login');
+    if (role === 'admin') setCurrentView('admin-login');
+  };
+
+  const handleLoginSuccess = () => {
+    if (userRole === 'student') setCurrentView('student');
+    if (userRole === 'teacher') setCurrentView('teacher');
+    if (userRole === 'admin') setCurrentView('admin');
+  };
+
+  const handleBackToRoleSelect = () => {
+    setCurrentView('login');
+    setUserRole(null);
   };
 
   const handleLogout = () => {
@@ -56,6 +70,42 @@ export default function App() {
             transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
           >
             <LoginPage onRoleSelect={handleRoleSelect} />
+          </motion.div>
+        )}
+
+        {currentView === 'student-login' && (
+          <motion.div
+            key="student-login"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
+          >
+            <StudentLogin onLogin={handleLoginSuccess} onBack={handleBackToRoleSelect} />
+          </motion.div>
+        )}
+
+        {currentView === 'teacher-login' && (
+          <motion.div
+            key="teacher-login"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
+          >
+            <TeacherLogin onLogin={handleLoginSuccess} onBack={handleBackToRoleSelect} />
+          </motion.div>
+        )}
+
+        {currentView === 'admin-login' && (
+          <motion.div
+            key="admin-login"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
+          >
+            <AdminLogin onLogin={handleLoginSuccess} onBack={handleBackToRoleSelect} />
           </motion.div>
         )}
 

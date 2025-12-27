@@ -12,7 +12,8 @@ import {
   MessageSquare,
   TrendingUp,
   Clock,
-  CheckCircle
+  CheckCircle,
+  BookOpen
 } from 'lucide-react';
 import { GlassCard } from './GlassCard';
 import { TabNavigation } from './TabNavigation';

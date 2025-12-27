@@ -13,7 +13,18 @@ import {
   Database,
   TrendingUp,
   AlertTriangle,
-  CheckCircle
+  CheckCircle,
+  UserPlus,
+  Edit,
+  Trash2,
+  Search,
+  Filter,
+  Eye,
+  EyeOff,
+  Download,
+  Upload,
+  Save,
+  RefreshCw
 } from 'lucide-react';
 import { GlassCard } from './GlassCard';
 import { TabNavigation } from './TabNavigation';
@@ -26,6 +37,8 @@ interface AdminDashboardProps {
 
 export function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedRole, setSelectedRole] = useState('all');
 
   const tabs = [
     { id: 'dashboard', label: 'Admin Dashboard', icon: LayoutDashboard },
@@ -76,6 +89,41 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
     { week: 'W3', events: 2 },
     { week: 'W4', events: 3 },
   ];
+
+  // Mock data for User Management
+  const [users] = useState([
+    { id: 1, name: 'John Doe', email: 'john@example.com', role: 'Student', status: 'Active', lastLogin: '2024-01-15', joinDate: '2023-09-01' },
+    { id: 2, name: 'Jane Smith', email: 'jane@example.com', role: 'Teacher', status: 'Active', lastLogin: '2024-01-14', joinDate: '2023-08-15' },
+    { id: 3, name: 'Bob Johnson', email: 'bob@example.com', role: 'Student', status: 'Inactive', lastLogin: '2023-12-20', joinDate: '2023-10-01' },
+    { id: 4, name: 'Alice Brown', email: 'alice@example.com', role: 'Admin', status: 'Active', lastLogin: '2024-01-15', joinDate: '2023-07-01' },
+    { id: 5, name: 'Charlie Wilson', email: 'charlie@example.com', role: 'Teacher', status: 'Active', lastLogin: '2024-01-13', joinDate: '2023-11-01' },
+  ]);
+
+  // Mock data for Content Oversight
+  const [contentItems] = useState([
+    { id: 1, title: 'Introduction to React', author: 'Jane Smith', type: 'Course', status: 'Approved', submitted: '2024-01-10', views: 1250 },
+    { id: 2, title: 'Advanced JavaScript Concepts', author: 'Bob Johnson', type: 'Article', status: 'Pending', submitted: '2024-01-12', views: 0 },
+    { id: 3, title: 'Machine Learning Basics', author: 'Alice Brown', type: 'Video', status: 'Under Review', submitted: '2024-01-14', views: 340 },
+    { id: 4, title: 'Database Design Principles', author: 'Charlie Wilson', type: 'Course', status: 'Rejected', submitted: '2024-01-08', views: 0 },
+  ]);
+
+  // Mock data for Reports
+  const [reports] = useState([
+    { id: 1, name: 'Monthly User Activity Report', type: 'Activity', generated: '2024-01-01', size: '2.3 MB', downloads: 45 },
+    { id: 2, name: 'Content Engagement Analytics', type: 'Analytics', generated: '2024-01-05', size: '1.8 MB', downloads: 32 },
+    { id: 3, name: 'System Performance Report', type: 'Performance', generated: '2024-01-10', size: '3.1 MB', downloads: 28 },
+    { id: 4, name: 'Security Audit Log', type: 'Security', generated: '2024-01-15', size: '4.2 MB', downloads: 12 },
+  ]);
+
+  // Settings state
+  const [settings, setSettings] = useState({
+    maintenanceMode: false,
+    emailNotifications: true,
+    autoBackup: true,
+    userRegistration: true,
+    contentModeration: true,
+    analyticsTracking: true,
+  });
 
   return (
     <div className="relative min-h-screen px-6 py-8">
@@ -400,20 +448,435 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
             </motion.div>
           )}
 
-          {(activeTab === 'users' || activeTab === 'content' || activeTab === 'reports' || activeTab === 'settings') && (
+          {activeTab === 'users' && (
             <motion.div
-              key={activeTab}
+              key="users"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.4 }}
             >
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-[#e8e6e1]">User Management</h2>
+                <button className="btn-3d flex items-center gap-2 px-4 py-2 bg-[#FFD600] text-[#0a0a0a] rounded-lg hover:bg-[#FFB800] transition-colors">
+                  <UserPlus className="w-4 h-4" />
+                  Add User
+                </button>
+              </div>
+
+              {/* Search and Filter */}
+              <GlassCard className="mb-6">
+                <div className="flex flex-col md:flex-row gap-4">
+                  <div className="flex-1 relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#a8a6a1]" />
+                    <input
+                      type="text"
+                      placeholder="Search users..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full pl-10 pr-4 py-2 bg-[#1a1a1a] border border-[#FFD600]/20 rounded-lg text-[#e8e6e1] placeholder-[#a8a6a1] focus:outline-none focus:border-[#FFD600]"
+                    />
+                  </div>
+                  <select
+                    value={selectedRole}
+                    onChange={(e) => setSelectedRole(e.target.value)}
+                    className="px-4 py-2 bg-[#1a1a1a] border border-[#FFD600]/20 rounded-lg text-[#e8e6e1] focus:outline-none focus:border-[#FFD600]"
+                  >
+                    <option value="all">All Roles</option>
+                    <option value="Student">Student</option>
+                    <option value="Teacher">Teacher</option>
+                    <option value="Admin">Admin</option>
+                  </select>
+                </div>
+              </GlassCard>
+
+              {/* Users Table */}
               <GlassCard>
-                <div className="text-center py-12">
-                  <h3 className="mb-2" style={{ fontSize: '1.5rem', fontWeight: 600, color: '#e8e6e1' }}>
-                    {tabs.find(t => t.id === activeTab)?.label}
-                  </h3>
-                  <p className="text-[#a8a6a1]">Content for this tab is being developed</p>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-[#FFD600]/20">
+                        <th className="text-left py-3 px-4 text-[#a8a6a1] font-medium">Name</th>
+                        <th className="text-left py-3 px-4 text-[#a8a6a1] font-medium">Email</th>
+                        <th className="text-left py-3 px-4 text-[#a8a6a1] font-medium">Role</th>
+                        <th className="text-left py-3 px-4 text-[#a8a6a1] font-medium">Status</th>
+                        <th className="text-left py-3 px-4 text-[#a8a6a1] font-medium">Last Login</th>
+                        <th className="text-left py-3 px-4 text-[#a8a6a1] font-medium">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {users
+                        .filter(user => 
+                          (selectedRole === 'all' || user.role === selectedRole) &&
+                          (user.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                           user.email.toLowerCase().includes(searchTerm.toLowerCase()))
+                        )
+                        .map((user) => (
+                          <tr key={user.id} className="border-b border-[#FFD600]/10 hover:bg-[#1a1a1a]/50">
+                            <td className="py-3 px-4 text-[#e8e6e1]">{user.name}</td>
+                            <td className="py-3 px-4 text-[#e8e6e1]">{user.email}</td>
+                            <td className="py-3 px-4">
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                user.role === 'Admin' ? 'bg-[#FF3333]/20 text-[#FF3333]' :
+                                user.role === 'Teacher' ? 'bg-[#FFD600]/20 text-[#FFD600]' :
+                                'bg-[#FFB800]/20 text-[#FFB800]'
+                              }`}>
+                                {user.role}
+                              </span>
+                            </td>
+                            <td className="py-3 px-4">
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                user.status === 'Active' ? 'bg-[#FFD600]/20 text-[#FFD600]' : 'bg-[#FF3333]/20 text-[#FF3333]'
+                              }`}>
+                                {user.status}
+                              </span>
+                            </td>
+                            <td className="py-3 px-4 text-[#a8a6a1]">{user.lastLogin}</td>
+                            <td className="py-3 px-4">
+                              <div className="flex gap-2">
+                                <button className="p-1 text-[#FFD600] hover:text-[#FFB800] transition-colors">
+                                  <Edit className="w-4 h-4" />
+                                </button>
+                                <button className="p-1 text-[#FF3333] hover:text-[#FF5555] transition-colors">
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
+                </div>
+              </GlassCard>
+            </motion.div>
+          )}
+
+          {activeTab === 'content' && (
+            <motion.div
+              key="content"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.4 }}
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-[#e8e6e1]">Content Oversight</h2>
+                <div className="flex gap-2">
+                  <button className="btn-3d flex items-center gap-2 px-4 py-2 bg-[#FFD600] text-[#0a0a0a] rounded-lg hover:bg-[#FFB800] transition-colors">
+                    <Upload className="w-4 h-4" />
+                    Bulk Actions
+                  </button>
+                </div>
+              </div>
+
+              {/* Content Stats */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                {[
+                  { label: 'Total Content', value: '1,247', icon: FileText, color: '#FFD600' },
+                  { label: 'Pending Review', value: '23', icon: Eye, color: '#FFB800' },
+                  { label: 'Approved', value: '1,189', icon: CheckCircle, color: '#FFD600' },
+                  { label: 'Rejected', value: '35', icon: AlertTriangle, color: '#FF3333' },
+                ].map((stat, index) => {
+                  const Icon = stat.icon;
+                  return (
+                    <GlassCard key={index} enableParallax={false}>
+                      <div className="flex items-center gap-3">
+                        <div className={`p-2 rounded-lg bg-[${stat.color}]/10`}>
+                          <Icon className="w-5 h-5" style={{ color: stat.color }} />
+                        </div>
+                        <div>
+                          <p className="text-[#a8a6a1] text-sm">{stat.label}</p>
+                          <p className="text-xl font-bold" style={{ color: stat.color }}>{stat.value}</p>
+                        </div>
+                      </div>
+                    </GlassCard>
+                  );
+                })}
+              </div>
+
+              {/* Content Table */}
+              <GlassCard>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-[#FFD600]/20">
+                        <th className="text-left py-3 px-4 text-[#a8a6a1] font-medium">Title</th>
+                        <th className="text-left py-3 px-4 text-[#a8a6a1] font-medium">Author</th>
+                        <th className="text-left py-3 px-4 text-[#a8a6a1] font-medium">Type</th>
+                        <th className="text-left py-3 px-4 text-[#a8a6a1] font-medium">Status</th>
+                        <th className="text-left py-3 px-4 text-[#a8a6a1] font-medium">Views</th>
+                        <th className="text-left py-3 px-4 text-[#a8a6a1] font-medium">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {contentItems.map((item) => (
+                        <tr key={item.id} className="border-b border-[#FFD600]/10 hover:bg-[#1a1a1a]/50">
+                          <td className="py-3 px-4 text-[#e8e6e1] font-medium">{item.title}</td>
+                          <td className="py-3 px-4 text-[#e8e6e1]">{item.author}</td>
+                          <td className="py-3 px-4">
+                            <span className="px-2 py-1 rounded-full text-xs font-medium bg-[#FFD600]/20 text-[#FFD600]">
+                              {item.type}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4">
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              item.status === 'Approved' ? 'bg-[#FFD600]/20 text-[#FFD600]' :
+                              item.status === 'Pending' ? 'bg-[#FFB800]/20 text-[#FFB800]' :
+                              item.status === 'Under Review' ? 'bg-[#FFA500]/20 text-[#FFA500]' :
+                              'bg-[#FF3333]/20 text-[#FF3333]'
+                            }`}>
+                              {item.status}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 text-[#a8a6a1]">{item.views.toLocaleString()}</td>
+                          <td className="py-3 px-4">
+                            <div className="flex gap-2">
+                              <button className="p-1 text-[#FFD600] hover:text-[#FFB800] transition-colors">
+                                <Eye className="w-4 h-4" />
+                              </button>
+                              <button className="p-1 text-[#FFD600] hover:text-[#FFB800] transition-colors">
+                                <CheckCircle className="w-4 h-4" />
+                              </button>
+                              <button className="p-1 text-[#FF3333] hover:text-[#FF5555] transition-colors">
+                                <AlertTriangle className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </GlassCard>
+            </motion.div>
+          )}
+
+          {activeTab === 'reports' && (
+            <motion.div
+              key="reports"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.4 }}
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-[#e8e6e1]">Reports & Analytics</h2>
+                <div className="flex gap-2">
+                  <button className="btn-3d flex items-center gap-2 px-4 py-2 bg-[#FFD600] text-[#0a0a0a] rounded-lg hover:bg-[#FFB800] transition-colors">
+                    <RefreshCw className="w-4 h-4" />
+                    Generate Report
+                  </button>
+                  <button className="btn-3d flex items-center gap-2 px-4 py-2 bg-[#1a1a1a] text-[#e8e6e1] border border-[#FFD600]/20 rounded-lg hover:bg-[#2a2a2a] transition-colors">
+                    <Download className="w-4 h-4" />
+                    Export All
+                  </button>
+                </div>
+              </div>
+
+              {/* Report Categories */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                {[
+                  { title: 'User Activity', description: 'Detailed user engagement metrics', count: 12, color: '#FFD600' },
+                  { title: 'Content Analytics', description: 'Content performance and usage', count: 8, color: '#FFB800' },
+                  { title: 'System Performance', description: 'Server and application metrics', count: 15, color: '#FFA500' },
+                  { title: 'Security Reports', description: 'Security incidents and audits', count: 5, color: '#FF3333' },
+                ].map((category, index) => (
+                  <GlassCard key={index} enableParallax={false} className="cursor-pointer hover:scale-105 transition-transform">
+                    <div className="text-center">
+                      <div className="w-12 h-12 mx-auto mb-3 rounded-full flex items-center justify-center" style={{ backgroundColor: `${category.color}20` }}>
+                        <BarChart3 className="w-6 h-6" style={{ color: category.color }} />
+                      </div>
+                      <h3 className="font-semibold text-[#e8e6e1] mb-1">{category.title}</h3>
+                      <p className="text-sm text-[#a8a6a1] mb-2">{category.description}</p>
+                      <span className="inline-block px-2 py-1 bg-[#FFD600]/20 text-[#FFD600] rounded-full text-xs font-medium">
+                        {category.count} reports
+                      </span>
+                    </div>
+                  </GlassCard>
+                ))}
+              </div>
+
+              {/* Recent Reports */}
+              <GlassCard>
+                <h3 className="text-lg font-semibold text-[#e8e6e1] mb-4">Recent Reports</h3>
+                <div className="space-y-3">
+                  {reports.map((report) => (
+                    <div key={report.id} className="flex items-center justify-between p-4 bg-[#1a1a1a] rounded-lg hover:bg-[#2a2a2a] transition-colors">
+                      <div className="flex items-center gap-4">
+                        <div className={`p-2 rounded-lg ${
+                          report.type === 'Activity' ? 'bg-[#FFD600]/20' :
+                          report.type === 'Analytics' ? 'bg-[#FFB800]/20' :
+                          report.type === 'Performance' ? 'bg-[#FFA500]/20' :
+                          'bg-[#FF3333]/20'
+                        }`}>
+                          <FileText className="w-5 h-5" style={{ 
+                            color: report.type === 'Activity' ? '#FFD600' :
+                                   report.type === 'Analytics' ? '#FFB800' :
+                                   report.type === 'Performance' ? '#FFA500' : '#FF3333'
+                          }} />
+                        </div>
+                        <div>
+                          <h4 className="font-medium text-[#e8e6e1]">{report.name}</h4>
+                          <p className="text-sm text-[#a8a6a1]">
+                            {report.type} • Generated: {report.generated} • Size: {report.size}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <span className="text-sm text-[#a8a6a1]">{report.downloads} downloads</span>
+                        <button className="p-2 text-[#FFD600] hover:text-[#FFB800] transition-colors">
+                          <Download className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </GlassCard>
+            </motion.div>
+          )}
+
+          {activeTab === 'settings' && (
+            <motion.div
+              key="settings"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.4 }}
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-[#e8e6e1]">System Settings</h2>
+                <button className="btn-3d flex items-center gap-2 px-4 py-2 bg-[#FFD600] text-[#0a0a0a] rounded-lg hover:bg-[#FFB800] transition-colors">
+                  <Save className="w-4 h-4" />
+                  Save Changes
+                </button>
+              </div>
+
+              <div className="grid lg:grid-cols-2 gap-6">
+                {/* General Settings */}
+                <GlassCard>
+                  <h3 className="text-lg font-semibold text-[#e8e6e1] mb-4">General Settings</h3>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <label className="text-[#e8e6e1] font-medium">Maintenance Mode</label>
+                        <p className="text-sm text-[#a8a6a1]">Temporarily disable user access</p>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={settings.maintenanceMode}
+                          onChange={(e) => setSettings({...settings, maintenanceMode: e.target.checked})}
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-[#1a1a1a] peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#FFD600]/25 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#FFD600]"></div>
+                      </label>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <label className="text-[#e8e6e1] font-medium">User Registration</label>
+                        <p className="text-sm text-[#a8a6a1]">Allow new users to register</p>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={settings.userRegistration}
+                          onChange={(e) => setSettings({...settings, userRegistration: e.target.checked})}
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-[#1a1a1a] peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#FFD600]/25 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#FFD600]"></div>
+                      </label>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <label className="text-[#e8e6e1] font-medium">Email Notifications</label>
+                        <p className="text-sm text-[#a8a6a1]">Send system notifications via email</p>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={settings.emailNotifications}
+                          onChange={(e) => setSettings({...settings, emailNotifications: e.target.checked})}
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-[#1a1a1a] peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#FFD600]/25 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#FFD600]"></div>
+                      </label>
+                    </div>
+                  </div>
+                </GlassCard>
+
+                {/* Security & Privacy */}
+                <GlassCard>
+                  <h3 className="text-lg font-semibold text-[#e8e6e1] mb-4">Security & Privacy</h3>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <label className="text-[#e8e6e1] font-medium">Content Moderation</label>
+                        <p className="text-sm text-[#a8a6a1]">Automatically moderate user content</p>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={settings.contentModeration}
+                          onChange={(e) => setSettings({...settings, contentModeration: e.target.checked})}
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-[#1a1a1a] peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#FFD600]/25 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#FFD600]"></div>
+                      </label>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <label className="text-[#e8e6e1] font-medium">Analytics Tracking</label>
+                        <p className="text-sm text-[#a8a6a1]">Track user behavior and analytics</p>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={settings.analyticsTracking}
+                          onChange={(e) => setSettings({...settings, analyticsTracking: e.target.checked})}
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-[#1a1a1a] peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#FFD600]/25 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#FFD600]"></div>
+                      </label>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <label className="text-[#e8e6e1] font-medium">Automatic Backup</label>
+                        <p className="text-sm text-[#a8a6a1]">Daily automatic system backups</p>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={settings.autoBackup}
+                          onChange={(e) => setSettings({...settings, autoBackup: e.target.checked})}
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-[#1a1a1a] peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#FFD600]/25 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#FFD600]"></div>
+                      </label>
+                    </div>
+                  </div>
+                </GlassCard>
+              </div>
+
+              {/* System Actions */}
+              <GlassCard className="mt-6">
+                <h3 className="text-lg font-semibold text-[#e8e6e1] mb-4">System Actions</h3>
+                <div className="grid md:grid-cols-3 gap-4">
+                  <button className="btn-3d p-4 bg-[#1a1a1a] text-[#e8e6e1] rounded-lg hover:bg-[#2a2a2a] transition-colors text-center">
+                    <RefreshCw className="w-6 h-6 text-[#FFD600] mx-auto mb-2" />
+                    <span className="text-sm">Clear Cache</span>
+                  </button>
+                  <button className="btn-3d p-4 bg-[#1a1a1a] text-[#e8e6e1] rounded-lg hover:bg-[#2a2a2a] transition-colors text-center">
+                    <Database className="w-6 h-6 text-[#FFD600] mx-auto mb-2" />
+                    <span className="text-sm">Backup Data</span>
+                  </button>
+                  <button className="btn-3d p-4 bg-[#FF3333]/10 text-[#FF3333] rounded-lg hover:bg-[#FF3333]/20 transition-colors text-center border border-[#FF3333]/20">
+                    <AlertTriangle className="w-6 h-6 mx-auto mb-2" />
+                    <span className="text-sm">Reset Settings</span>
+                  </button>
                 </div>
               </GlassCard>
             </motion.div>

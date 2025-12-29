@@ -1,11 +1,7 @@
 const express = require('express');
-const OpenAI = require('openai');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 const { authenticate } = require('../middleware/auth');
 const router = express.Router();
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
 
 // Chat endpoint for students and teachers
 router.post('/chat', async (req, res) => {
@@ -16,31 +12,33 @@ router.post('/chat', async (req, res) => {
       return res.status(400).json({ message: 'Message is required' });
     }
 
+    if (!process.env.GEMINI_API_KEY) {
+      console.error('GEMINI_API_KEY is not configured');
+      return res.status(500).json({ message: 'AI configuration error' });
+    }
+
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+
     // Create system prompt based on role
     let systemPrompt = '';
     if (role === 'student') {
-      systemPrompt = 'You are an AI study assistant helping students with their learning. Provide clear, helpful explanations and encourage understanding.';
+      systemPrompt = 'You are an AI study assistant helping students with their learning. Provide clear, helpful explanations and encourage understanding. If the user asks for code, ensure the code is well-formatted with correct indentation.';
     } else if (role === 'teacher') {
       systemPrompt = 'You are an AI teaching assistant helping teachers with lesson planning, student assessment, and educational strategies. Provide professional, educational guidance.';
     } else {
       systemPrompt = 'You are a helpful AI assistant for educational purposes.';
     }
 
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo',
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: message }
-      ],
-      max_tokens: 500,
-      temperature: 0.7,
-    });
+    const prompt = `${systemPrompt}\n\nUser: ${message}\nAI:`;
 
-    const aiResponse = completion.choices[0].message.content;
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const aiResponse = response.text();
 
     res.json({ response: aiResponse });
   } catch (error) {
-    console.error('AI Chat Error:', error);
+    console.error('AI Chat Error:', error.message);
     res.status(500).json({ message: 'Failed to get AI response' });
   }
 });

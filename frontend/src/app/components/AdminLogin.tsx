@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { motion } from 'motion/react';
 import { Shield, Eye, EyeOff, ArrowLeft, Mail, Lock } from 'lucide-react';
 import { GlassCard } from './GlassCard';
+import { authAPI } from '../api';
 
 interface AdminLoginProps {
   onLogin: () => void;
@@ -18,11 +19,11 @@ export function AdminLogin({ onLogin, onBack }: AdminLoginProps) {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simulate login process
+    // For testing purposes, allow any email/password combination
     setTimeout(() => {
       setIsLoading(false);
       onLogin();
-    }, 1500);
+    }, 1000);
   };
 
   return (

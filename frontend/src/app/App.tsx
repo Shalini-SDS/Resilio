@@ -9,6 +9,7 @@ import { StudentDashboard } from './components/StudentDashboard';
 import { TeacherDashboard } from './components/TeacherDashboard';
 import { AdminDashboard } from './components/AdminDashboard';
 import { GlitterEffect } from './components/GlitterEffect';
+import { clearAuthToken } from './api';
 
 type View = 'landing' | 'login' | 'student-login' | 'teacher-login' | 'admin-login' | 'student' | 'teacher' | 'admin';
 type Role = 'student' | 'teacher' | 'admin' | null;
@@ -40,6 +41,7 @@ export default function App() {
   };
 
   const handleLogout = () => {
+    clearAuthToken();
     setCurrentView('landing');
     setUserRole(null);
   };

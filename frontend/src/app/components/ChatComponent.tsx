@@ -55,9 +55,19 @@ export function ChatComponent({ title, placeholder, role }: ChatComponentProps) 
       setMessages(prev => [...prev, aiMessage]);
     } catch (error) {
       console.error('Failed to send message:', error);
+      let errorText = 'Sorry, I encountered an error. Please try again.';
+      
+      if (error instanceof Error) {
+        if (error.message.includes('Failed to send message')) {
+          errorText = 'Unable to connect to the server. Please check your connection.';
+        } else {
+          errorText = `Error: ${error.message}`;
+        }
+      }
+      
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: 'Sorry, I encountered an error. Please try again.',
+        text: errorText,
         isAI: true,
         timestamp: new Date(),
       };

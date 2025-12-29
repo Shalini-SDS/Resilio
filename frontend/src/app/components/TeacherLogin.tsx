@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { motion } from 'motion/react';
 import { BookOpen, Eye, EyeOff, ArrowLeft, Mail, Lock, User } from 'lucide-react';
 import { GlassCard } from './GlassCard';
+import { authAPI } from '../api';
 
 interface TeacherLoginProps {
   onLogin: () => void;
@@ -18,11 +19,11 @@ export function TeacherLogin({ onLogin, onBack }: TeacherLoginProps) {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simulate login process
+    // For testing purposes, allow any email/password combination
     setTimeout(() => {
       setIsLoading(false);
       onLogin();
-    }, 1500);
+    }, 1000);
   };
 
   return (

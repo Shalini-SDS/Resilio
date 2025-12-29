@@ -1,10 +1,11 @@
 const express = require('express');
 const Assignment = require('../models/Assignment');
+const { authenticate, requireTeacher, requireStudent } = require('../middleware/auth');
 
 const router = express.Router();
 
 // Get assignment by ID
-router.get('/:id', async (req, res) => {
+router.get('/:id', authenticate, async (req, res) => {
   try {
     const assignment = await Assignment.findById(req.params.id)
       .populate('course', 'title subject')
@@ -14,7 +15,14 @@ router.get('/:id', async (req, res) => {
       return res.status(404).json({ message: 'Assignment not found' });
     }
 
-    // TODO: Check if user has access to this assignment
+    // Check if user has access to this assignment (teacher or enrolled student)
+    const course = await require('../models/Course').findById(assignment.course);
+    const isTeacher = assignment.teacher.toString() === req.user.id;
+    const isEnrolled = course && course.students.includes(req.user.id);
+
+    if (!isTeacher && !isEnrolled) {
+      return res.status(403).json({ message: 'Access denied' });
+    }
 
     res.json(assignment);
   } catch (error) {
@@ -24,7 +32,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // Get submissions for an assignment (teacher only)
-router.get('/:id/submissions', async (req, res) => {
+router.get('/:id/submissions', authenticate, requireTeacher, async (req, res) => {
   try {
     const assignment = await Assignment.findById(req.params.id)
       .populate('submissions.student', 'name email')
@@ -34,7 +42,10 @@ router.get('/:id/submissions', async (req, res) => {
       return res.status(404).json({ message: 'Assignment not found' });
     }
 
-    // TODO: Check if user is the teacher of this assignment
+    // Check if user is the teacher of this assignment
+    if (assignment.teacher.toString() !== req.user.id) {
+      return res.status(403).json({ message: 'Access denied' });
+    }
 
     res.json(assignment.submissions);
   } catch (error) {
@@ -44,7 +55,7 @@ router.get('/:id/submissions', async (req, res) => {
 });
 
 // Update assignment (teacher only)
-router.put('/:id', async (req, res) => {
+router.put('/:id', authenticate, requireTeacher, async (req, res) => {
   try {
     const assignment = await Assignment.findById(req.params.id);
 
@@ -52,7 +63,10 @@ router.put('/:id', async (req, res) => {
       return res.status(404).json({ message: 'Assignment not found' });
     }
 
-    // TODO: Check if user is the teacher
+    // Check if user is the teacher
+    if (assignment.teacher.toString() !== req.user.id) {
+      return res.status(403).json({ message: 'Access denied' });
+    }
 
     const updates = req.body;
     const allowedUpdates = ['title', 'description', 'dueDate', 'totalPoints', 'instructions', 'attachments', 'status'];
@@ -73,7 +87,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // Delete assignment (teacher only)
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authenticate, requireTeacher, async (req, res) => {
   try {
     const assignment = await Assignment.findById(req.params.id);
 
@@ -81,7 +95,10 @@ router.delete('/:id', async (req, res) => {
       return res.status(404).json({ message: 'Assignment not found' });
     }
 
-    // TODO: Check if user is the teacher
+    // Check if user is the teacher
+    if (assignment.teacher.toString() !== req.user.id) {
+      return res.status(403).json({ message: 'Access denied' });
+    }
 
     await assignment.remove();
 

@@ -107,6 +107,30 @@ router.get('/courses/:courseId', [authenticate, requireTeacher], async (req, res
 // Create assignment for a course
 router.post('/courses/:courseId/assignments', [authenticate, requireTeacher], async (req, res) => {
   try {
+    const { title, description, dueDate, totalPoints, type } = req.body;
+
+    console.log('Creating assignment with body:', req.body);
+    console.log('Course ID:', req.params.courseId);
+    console.log('Teacher ID:', req.user.id);
+
+    // Validation
+    if (!title || !title.trim()) {
+      return res.status(400).json({ message: 'Title is required' });
+    }
+
+    if (!description || !description.trim()) {
+      return res.status(400).json({ message: 'Description is required' });
+    }
+
+    if (!dueDate) {
+      return res.status(400).json({ message: 'Due date is required' });
+    }
+
+    const dueDateTime = new Date(dueDate);
+    if (isNaN(dueDateTime.getTime())) {
+      return res.status(400).json({ message: 'Invalid due date format' });
+    }
+
     const course = await Course.findOne({
       _id: req.params.courseId,
       teacher: req.user.id
@@ -117,12 +141,18 @@ router.post('/courses/:courseId/assignments', [authenticate, requireTeacher], as
     }
 
     const assignment = new Assignment({
-      ...req.body,
+      title: title.trim(),
+      description: description.trim(),
       course: req.params.courseId,
-      teacher: req.user.id
+      teacher: req.user.id,
+      dueDate: dueDateTime,
+      totalPoints: totalPoints || 100,
+      type: type || 'homework',
+      status: 'published'
     });
 
     await assignment.save();
+    console.log('Assignment created successfully:', assignment._id);
 
     // Add assignment to course
     course.assignments.push(assignment._id);
@@ -130,8 +160,12 @@ router.post('/courses/:courseId/assignments', [authenticate, requireTeacher], as
 
     res.status(201).json(assignment);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Error creating assignment:', error);
+    res.status(500).json({ 
+      message: 'Failed to create assignment', 
+      error: error.message,
+      details: error.errors ? Object.keys(error.errors).map(k => `${k}: ${error.errors[k].message}`) : []
+    });
   }
 });
 

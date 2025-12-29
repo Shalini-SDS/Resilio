@@ -365,7 +365,7 @@ export const studentAPI = {
 
   submitAssignment: async (assignmentId: string, submissionData: any) => {
     const token = getAuthToken();
-    const response = await fetch(`${API_BASE_URL}/assignments/${assignmentId}/submit`, {
+    const response = await fetch(`${API_BASE_URL}/students/assignments/${assignmentId}/submit`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -373,7 +373,21 @@ export const studentAPI = {
       },
       body: JSON.stringify(submissionData),
     });
-    if (!response.ok) throw new Error('Failed to submit assignment');
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to submit assignment');
+    }
+    return response.json();
+  },
+
+  getGrades: async () => {
+    const token = getAuthToken();
+    const response = await fetch(`${API_BASE_URL}/students/grades`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    if (!response.ok) throw new Error('Failed to fetch grades');
     return response.json();
   },
 };

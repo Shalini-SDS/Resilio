@@ -14,7 +14,12 @@ import {
   Clock,
   CheckCircle,
   BookOpen,
-  Plus
+  Plus,
+  Eye,
+  X,
+  Upload,
+  Download,
+  AlertCircle
 } from 'lucide-react';
 import { GlassCard } from './GlassCard';
 import { TabNavigation } from './TabNavigation';
@@ -73,13 +78,15 @@ export function TeacherDashboard({ onLogout, onManageClass }: TeacherDashboardPr
 
   // Create Assignment Modal State
   const [isAssignmentModalOpen, setIsAssignmentModalOpen] = useState(false);
+  const [assignmentError, setAssignmentError] = useState('');
+  const [assignmentLoading, setAssignmentLoading] = useState(false);
   const [newAssignment, setNewAssignment] = useState({
     courseId: '',
     title: '',
     description: '',
     dueDate: '',
     totalPoints: 100,
-    type: 'assignment'
+    type: 'homework'
   });
 
   // Class Code Display State
@@ -90,6 +97,21 @@ export function TeacherDashboard({ onLogout, onManageClass }: TeacherDashboardPr
   const [selectedAssignment, setSelectedAssignment] = useState<any>(null);
   const [assignmentSubTab, setAssignmentSubTab] = useState<'submissions' | 'details' | 'analytics'>('submissions');
   const [assignmentFilter, setAssignmentFilter] = useState<'active' | 'past' | 'draft'>('active');
+  const [viewingSubmission, setViewingSubmission] = useState<any>(null);
+
+  // Material Upload State
+  const [isMaterialModalOpen, setIsMaterialModalOpen] = useState(false);
+  const [selectedCourseForMaterial, setSelectedCourseForMaterial] = useState<any>(null);
+  const [materials, setMaterials] = useState<any[]>([]);
+  const [newMaterial, setNewMaterial] = useState({
+    title: '',
+    description: '',
+    fileOrUrl: 'file' as 'file' | 'url',
+    file: null as File | null,
+    url: ''
+  });
+  const [materialLoading, setMaterialLoading] = useState(false);
+  const [materialError, setMaterialError] = useState('');
 
   useEffect(() => {
     fetchData();
@@ -168,9 +190,45 @@ export function TeacherDashboard({ onLogout, onManageClass }: TeacherDashboardPr
 
   const handleCreateAssignment = async (e: React.FormEvent) => {
     e.preventDefault();
+    setAssignmentError('');
+    
+    // Validation
+    if (!newAssignment.courseId.trim()) {
+      setAssignmentError('Please select a class');
+      return;
+    }
+    
+    if (!newAssignment.title.trim()) {
+      setAssignmentError('Please enter an assignment title');
+      return;
+    }
+    
+    if (!newAssignment.description.trim()) {
+      setAssignmentError('Please enter assignment instructions');
+      return;
+    }
+    
+    if (!newAssignment.dueDate) {
+      setAssignmentError('Please select a due date');
+      return;
+    }
+
+    if (newAssignment.totalPoints <= 0) {
+      setAssignmentError('Points must be greater than 0');
+      return;
+    }
+    
+    setAssignmentLoading(true);
     try {
       const { courseId, ...assignmentData } = newAssignment;
-      await teacherAPI.createAssignment(courseId, assignmentData);
+      const dueDateObj = new Date(newAssignment.dueDate);
+      dueDateObj.setHours(23, 59, 59);
+      
+      await teacherAPI.createAssignment(courseId, {
+        ...assignmentData,
+        dueDate: dueDateObj.toISOString()
+      });
+      
       setIsAssignmentModalOpen(false);
       setNewAssignment({
         courseId: '',
@@ -178,12 +236,77 @@ export function TeacherDashboard({ onLogout, onManageClass }: TeacherDashboardPr
         description: '',
         dueDate: '',
         totalPoints: 100,
-        type: 'assignment'
+        type: 'homework'
       });
+      setAssignmentError('');
       fetchData();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating assignment:', error);
-      alert('Failed to create assignment');
+      setAssignmentError(error.message || 'Failed to create assignment. Please try again.');
+    } finally {
+      setAssignmentLoading(false);
+    }
+  };
+
+  const handleUploadMaterial = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setMaterialError('');
+
+    if (!newMaterial.title.trim()) {
+      setMaterialError('Please enter a title');
+      return;
+    }
+
+    if (newMaterial.fileOrUrl === 'file' && !newMaterial.file) {
+      setMaterialError('Please select a file');
+      return;
+    }
+
+    if (newMaterial.fileOrUrl === 'url' && !newMaterial.url.trim()) {
+      setMaterialError('Please enter a URL');
+      return;
+    }
+
+    setMaterialLoading(true);
+    try {
+      const materialData: any = {
+        title: newMaterial.title,
+        description: newMaterial.description
+      };
+
+      if (newMaterial.fileOrUrl === 'file' && newMaterial.file) {
+        materialData.file = newMaterial.file;
+      } else if (newMaterial.fileOrUrl === 'url') {
+        materialData.url = newMaterial.url;
+      }
+
+      await teacherAPI.uploadMaterial(selectedCourseForMaterial._id, materialData);
+
+      setIsMaterialModalOpen(false);
+      setNewMaterial({
+        title: '',
+        description: '',
+        fileOrUrl: 'file',
+        file: null,
+        url: ''
+      });
+      setMaterialError('');
+      fetchMaterials(selectedCourseForMaterial._id);
+      alert('✅ Material uploaded successfully!');
+    } catch (error: any) {
+      console.error('Error uploading material:', error);
+      setMaterialError(error.message || 'Failed to upload material');
+    } finally {
+      setMaterialLoading(false);
+    }
+  };
+
+  const fetchMaterials = async (courseId: string) => {
+    try {
+      const mats = await teacherAPI.getMaterials(courseId);
+      setMaterials(mats);
+    } catch (error) {
+      console.error('Error fetching materials:', error);
     }
   };
 
@@ -542,12 +665,25 @@ export function TeacherDashboard({ onLogout, onManageClass }: TeacherDashboardPr
                           </div>
                         </div>
 
-                        <button 
-                          onClick={() => onManageClass(course)}
-                          className="w-full btn-3d bg-[#1a1a1a] text-[#e8e6e1] py-2 rounded-lg hover:bg-[#2a2a2a] transition-colors"
-                        >
-                          Manage Class
-                        </button>
+                        <div className="flex gap-2">
+                          <button 
+                            onClick={() => {
+                              setSelectedCourseForMaterial(course);
+                              setIsMaterialModalOpen(true);
+                              fetchMaterials(course._id);
+                            }}
+                            className="flex-1 btn-3d bg-[#FFD600] text-black py-2 rounded-lg hover:bg-[#FFD600]/90 transition-colors font-semibold flex items-center justify-center gap-2"
+                          >
+                            <Upload className="w-4 h-4" />
+                            Materials
+                          </button>
+                          <button 
+                            onClick={() => onManageClass(course)}
+                            className="flex-1 btn-3d bg-[#1a1a1a] text-[#e8e6e1] py-2 rounded-lg hover:bg-[#2a2a2a] transition-colors"
+                          >
+                            Manage
+                          </button>
+                        </div>
                       </div>
                     </GlassCard>
                   </motion.div>
@@ -749,30 +885,49 @@ export function TeacherDashboard({ onLogout, onManageClass }: TeacherDashboardPr
                         ) : (
                           selectedAssignment.submissions.map((submission: any, idx: number) => (
                             <GlassCard key={idx}>
-                              <div className="p-6 flex items-center justify-between">
-                                <div className="flex items-center gap-4">
-                                  <div className="w-10 h-10 rounded-full bg-[#FFD600]/20 flex items-center justify-center text-[#FFD600] font-bold">
-                                    {submission.student?.name?.[0] || 'S'}
+                              <div className="p-6">
+                                <div className="flex items-center justify-between mb-4">
+                                  <div className="flex items-center gap-4">
+                                    <div className="w-10 h-10 rounded-full bg-[#FFD600]/20 flex items-center justify-center text-[#FFD600] font-bold">
+                                      {submission.student?.name?.[0] || 'S'}
+                                    </div>
+                                    <div>
+                                      <h4 className="text-[#e8e6e1] font-semibold">{submission.student?.name || 'Unknown Student'}</h4>
+                                      <p className="text-[#a8a6a1] text-xs">Submitted on {new Date(submission.submittedAt).toLocaleString()}</p>
+                                    </div>
                                   </div>
-                                  <div>
-                                    <h4 className="text-[#e8e6e1] font-semibold">{submission.student?.name || 'Unknown Student'}</h4>
-                                    <p className="text-[#a8a6a1] text-xs">Submitted on {new Date(submission.submittedAt).toLocaleString()}</p>
+                                  <div className="flex items-center gap-4">
+                                    {submission.grade !== undefined ? (
+                                      <div className="text-right">
+                                        <div className="text-[#FFD600] font-bold">{submission.grade}/{selectedAssignment.totalPoints}</div>
+                                        <div className="text-green-400 text-[10px] font-bold uppercase tracking-wider">Graded</div>
+                                      </div>
+                                    ) : (
+                                      <span className="px-3 py-1 bg-yellow-500/20 text-yellow-400 text-xs font-semibold rounded-full">Pending</span>
+                                    )}
                                   </div>
                                 </div>
-                                <div className="flex items-center gap-4">
-                                  {submission.grade !== undefined ? (
-                                    <div className="text-right">
-                                      <div className="text-[#FFD600] font-bold">{submission.grade}/{selectedAssignment.totalPoints}</div>
-                                      <div className="text-green-400 text-[10px] font-bold uppercase tracking-wider">Graded</div>
-                                    </div>
-                                  ) : (
-                                    <button className="btn-3d bg-[#FFD600] text-black font-bold py-2 px-4 rounded-lg hover:bg-[#FFD600]/90 transition-colors text-xs">
-                                      Grade Now
+
+                                {submission.content && (
+                                  <div className="mb-4 p-4 bg-[#1a1a1a] rounded-lg">
+                                    <p className="text-[#a8a6a1] text-xs mb-2">Submission Content:</p>
+                                    <p className="text-[#e8e6e1] text-sm line-clamp-3">{submission.content}</p>
+                                  </div>
+                                )}
+
+                                <div className="flex gap-2">
+                                  <button 
+                                    onClick={() => setViewingSubmission(submission)}
+                                    className="flex-1 btn-3d bg-[#1a1a1a] text-[#e8e6e1] font-semibold py-2 px-4 rounded-lg hover:bg-[#2a2a2a] transition-colors text-sm flex items-center justify-center gap-2"
+                                  >
+                                    <Eye className="w-4 h-4" />
+                                    View Full
+                                  </button>
+                                  {submission.grade === undefined && (
+                                    <button className="flex-1 btn-3d bg-[#FFD600] text-black font-bold py-2 px-4 rounded-lg hover:bg-[#FFD600]/90 transition-colors text-sm">
+                                      Grade
                                     </button>
                                   )}
-                                  <button className="p-2 hover:bg-[#1a1a1a] rounded-lg transition-colors text-[#a8a6a1]">
-                                    <FileText className="w-5 h-5" />
-                                  </button>
                                 </div>
                               </div>
                             </GlassCard>
@@ -1559,9 +1714,14 @@ export function TeacherDashboard({ onLogout, onManageClass }: TeacherDashboardPr
                 Assign a new task to your students.
               </DialogDescription>
             </DialogHeader>
+            {assignmentError && (
+              <div className="mb-4 p-3 bg-red-500/10 border border-red-500/50 rounded-lg text-red-400 text-sm">
+                {assignmentError}
+              </div>
+            )}
             <form onSubmit={handleCreateAssignment} className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="courseId" className="text-[#a8a6a1]">Select Class</Label>
+                <Label htmlFor="courseId" className="text-[#a8a6a1]">Select Class *</Label>
                 <Select 
                   value={newAssignment.courseId} 
                   onValueChange={(value) => setNewAssignment({...newAssignment, courseId: value})}
@@ -1579,7 +1739,7 @@ export function TeacherDashboard({ onLogout, onManageClass }: TeacherDashboardPr
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="a-title" className="text-[#a8a6a1]">Assignment Title</Label>
+                <Label htmlFor="a-title" className="text-[#a8a6a1]">Assignment Title *</Label>
                 <Input 
                   id="a-title"
                   placeholder="e.g. Mid-term Research Paper"
@@ -1591,7 +1751,7 @@ export function TeacherDashboard({ onLogout, onManageClass }: TeacherDashboardPr
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="dueDate" className="text-[#a8a6a1]">Due Date</Label>
+                  <Label htmlFor="dueDate" className="text-[#a8a6a1]">Due Date *</Label>
                   <Input 
                     id="dueDate"
                     type="date"
@@ -1614,7 +1774,32 @@ export function TeacherDashboard({ onLogout, onManageClass }: TeacherDashboardPr
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="a-description" className="text-[#a8a6a1]">Instructions</Label>
+                <Label htmlFor="type" className="text-[#a8a6a1]">Assignment Type</Label>
+                <Select 
+                  value={newAssignment.type} 
+                  onValueChange={(value) => setNewAssignment({...newAssignment, type: value})}
+                >
+                  <SelectTrigger className="bg-[#1a1a1a] border-[#FFD600]/10 text-[#e8e6e1]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[#1a1a1a] border-[#FFD600]/20 text-[#e8e6e1]">
+                    <SelectItem value="homework" className="focus:bg-[#FFD600]/10 focus:text-[#FFD600]">
+                      Homework
+                    </SelectItem>
+                    <SelectItem value="quiz" className="focus:bg-[#FFD600]/10 focus:text-[#FFD600]">
+                      Quiz
+                    </SelectItem>
+                    <SelectItem value="project" className="focus:bg-[#FFD600]/10 focus:text-[#FFD600]">
+                      Project
+                    </SelectItem>
+                    <SelectItem value="exam" className="focus:bg-[#FFD600]/10 focus:text-[#FFD600]">
+                      Exam
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="a-description" className="text-[#a8a6a1]">Instructions *</Label>
                 <Textarea 
                   id="a-description"
                   placeholder="Provide details about the assignment..."
@@ -1627,20 +1812,285 @@ export function TeacherDashboard({ onLogout, onManageClass }: TeacherDashboardPr
                 <button 
                   type="button"
                   onClick={() => setIsAssignmentModalOpen(false)}
-                  className="px-4 py-2 text-[#a8a6a1] hover:text-[#e8e6e1] transition-colors"
+                  disabled={assignmentLoading}
+                  className="px-4 py-2 text-[#a8a6a1] hover:text-[#e8e6e1] transition-colors disabled:opacity-50"
                 >
                   Cancel
                 </button>
                 <button 
                   type="submit"
-                  className="btn-3d px-6 py-2 bg-[#FFD600] text-black font-bold rounded-lg hover:bg-[#FFD600]/90 transition-colors"
+                  disabled={assignmentLoading}
+                  className="btn-3d px-6 py-2 bg-[#FFD600] text-black font-bold rounded-lg hover:bg-[#FFD600]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Create Assignment
+                  {assignmentLoading ? 'Creating...' : 'Create Assignment'}
                 </button>
               </DialogFooter>
             </form>
           </DialogContent>
         </Dialog>
+
+        {/* Submission View Modal */}
+        <AnimatePresence>
+          {viewingSubmission && (
+            <motion.div
+              key="submission-view-modal"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+              onClick={() => setViewingSubmission(null)}
+            >
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.95, opacity: 0 }}
+                onClick={(e) => e.stopPropagation()}
+                className="bg-[#0a0a0a] border border-[#FFD600]/20 rounded-2xl p-8 max-w-3xl w-full max-h-[90vh] overflow-y-auto"
+              >
+                <div className="flex items-start justify-between mb-6">
+                  <div>
+                    <h2 className="text-2xl font-bold text-[#e8e6e1]">Submission Details</h2>
+                    <p className="text-[#a8a6a1] text-sm mt-1">From: {viewingSubmission.student?.name || 'Unknown Student'}</p>
+                  </div>
+                  <button
+                    onClick={() => setViewingSubmission(null)}
+                    className="p-2 hover:bg-[#1a1a1a] rounded-lg transition-colors"
+                  >
+                    <X className="w-5 h-5 text-[#a8a6a1]" />
+                  </button>
+                </div>
+
+                <div className="mb-6 p-4 bg-[#1a1a1a] rounded-lg grid grid-cols-3 gap-4 text-sm">
+                  <div>
+                    <span className="text-[#a8a6a1]">Student:</span>
+                    <p className="text-[#e8e6e1] font-semibold">{viewingSubmission.student?.name || 'Unknown'}</p>
+                  </div>
+                  <div>
+                    <span className="text-[#a8a6a1]">Submitted:</span>
+                    <p className="text-[#FFD600] font-semibold">{new Date(viewingSubmission.submittedAt).toLocaleString()}</p>
+                  </div>
+                  <div>
+                    <span className="text-[#a8a6a1]">Status:</span>
+                    <p className={`font-semibold ${viewingSubmission.grade !== undefined ? 'text-green-400' : 'text-yellow-400'}`}>
+                      {viewingSubmission.grade !== undefined ? 'Graded' : 'Pending Grading'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mb-6">
+                  <h3 className="text-[#e8e6e1] font-semibold mb-3">Submission Content</h3>
+                  <div className="p-6 bg-[#1a1a1a] rounded-lg border border-[#FFD600]/10 min-h-64 max-h-96 overflow-y-auto">
+                    <p className="text-[#e8e6e1] whitespace-pre-wrap">{viewingSubmission.content || 'No content provided'}</p>
+                  </div>
+                </div>
+
+                {viewingSubmission.grade !== undefined && (
+                  <div className="mb-6 p-4 bg-green-500/10 border border-green-500/30 rounded-lg">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <p className="text-green-400 font-semibold mb-2">Grade Received</p>
+                        <p className="text-[#a8a6a1] text-sm">Feedback: {viewingSubmission.feedback || 'No feedback provided'}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-green-400 font-bold text-2xl">{viewingSubmission.grade}</p>
+                        <p className="text-[#a8a6a1] text-xs">{selectedAssignment?.totalPoints || 100} points</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setViewingSubmission(null)}
+                    className="flex-1 btn-3d bg-[#1a1a1a] text-[#e8e6e1] font-semibold py-3 px-6 rounded-lg hover:bg-[#2a2a2a] transition-colors"
+                  >
+                    Close
+                  </button>
+                  {viewingSubmission.grade === undefined && (
+                    <button
+                      className="flex-1 btn-3d bg-[#FFD600] text-black font-semibold py-3 px-6 rounded-lg hover:bg-[#FFD600]/90 transition-colors"
+                    >
+                      Grade Submission
+                    </button>
+                  )}
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+
+          {/* Material Upload Modal */}
+          <AnimatePresence>
+            {isMaterialModalOpen && selectedCourseForMaterial && (
+              <motion.div
+                key="material-modal"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+                onClick={() => setIsMaterialModalOpen(false)}
+              >
+                <motion.div
+                  initial={{ scale: 0.95, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.95, opacity: 0 }}
+                  onClick={(e) => e.stopPropagation()}
+                  className="bg-[#0a0a0a] border border-[#FFD600]/20 rounded-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+                >
+                  <div className="flex items-start justify-between mb-6">
+                    <div>
+                      <h2 className="text-2xl font-bold text-[#e8e6e1]">Upload Materials</h2>
+                      <p className="text-[#a8a6a1] text-sm mt-1">{selectedCourseForMaterial.title}</p>
+                    </div>
+                    <button
+                      onClick={() => setIsMaterialModalOpen(false)}
+                      className="p-2 hover:bg-[#1a1a1a] rounded-lg transition-colors"
+                    >
+                      <X className="w-5 h-5 text-[#a8a6a1]" />
+                    </button>
+                  </div>
+
+                  {materials.length > 0 && (
+                    <div className="mb-6 p-4 bg-[#1a1a1a] rounded-lg">
+                      <h3 className="text-[#e8e6e1] font-semibold mb-3">Existing Materials ({materials.length})</h3>
+                      <div className="space-y-2 max-h-40 overflow-y-auto">
+                        {materials.map((material, idx) => (
+                          <div key={idx} className="flex items-center justify-between p-2 bg-[#0a0a0a] rounded">
+                            <div className="flex items-center gap-2">
+                              {material.type === 'file' ? (
+                                <FileText className="w-4 h-4 text-[#FFD600]" />
+                              ) : (
+                                <Download className="w-4 h-4 text-blue-400" />
+                              )}
+                              <span className="text-[#e8e6e1] text-sm">{material.title}</span>
+                            </div>
+                            <span className="text-[#a8a6a1] text-xs">{material.type}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <form onSubmit={handleUploadMaterial}>
+                    <div className="mb-4">
+                      <label className="block text-[#e8e6e1] font-semibold mb-2">Title *</label>
+                      <input
+                        type="text"
+                        value={newMaterial.title}
+                        onChange={(e) => setNewMaterial({...newMaterial, title: e.target.value})}
+                        placeholder="E.g., Chapter 1 PDF, Introduction Video"
+                        className="w-full bg-[#1a1a1a] text-[#e8e6e1] rounded-lg px-4 py-2 border border-[#FFD600]/20 focus:outline-none focus:border-[#FFD600] focus:ring-2 focus:ring-[#FFD600]/20"
+                      />
+                    </div>
+
+                    <div className="mb-4">
+                      <label className="block text-[#e8e6e1] font-semibold mb-2">Description</label>
+                      <textarea
+                        value={newMaterial.description}
+                        onChange={(e) => setNewMaterial({...newMaterial, description: e.target.value})}
+                        placeholder="Optional description about the material..."
+                        className="w-full bg-[#1a1a1a] text-[#e8e6e1] rounded-lg px-4 py-2 border border-[#FFD600]/20 focus:outline-none focus:border-[#FFD600] focus:ring-2 focus:ring-[#FFD600]/20 min-h-20"
+                      />
+                    </div>
+
+                    <div className="mb-4">
+                      <label className="block text-[#e8e6e1] font-semibold mb-2">Upload Type *</label>
+                      <div className="flex gap-3">
+                        <button
+                          type="button"
+                          onClick={() => setNewMaterial({...newMaterial, fileOrUrl: 'file'})}
+                          className={`flex-1 py-2 px-4 rounded-lg font-semibold transition-colors ${
+                            newMaterial.fileOrUrl === 'file'
+                              ? 'bg-[#FFD600] text-black'
+                              : 'bg-[#1a1a1a] text-[#e8e6e1] hover:bg-[#2a2a2a]'
+                          }`}
+                        >
+                          Upload File
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setNewMaterial({...newMaterial, fileOrUrl: 'url'})}
+                          className={`flex-1 py-2 px-4 rounded-lg font-semibold transition-colors ${
+                            newMaterial.fileOrUrl === 'url'
+                              ? 'bg-[#FFD600] text-black'
+                              : 'bg-[#1a1a1a] text-[#e8e6e1] hover:bg-[#2a2a2a]'
+                          }`}
+                        >
+                          Link URL
+                        </button>
+                      </div>
+                    </div>
+
+                    {newMaterial.fileOrUrl === 'file' && (
+                      <div className="mb-4">
+                        <label className="block text-[#e8e6e1] font-semibold mb-2">Select File *</label>
+                        <input
+                          type="file"
+                          onChange={(e) => setNewMaterial({...newMaterial, file: e.target.files?.[0] || null})}
+                          className="w-full bg-[#1a1a1a] text-[#e8e6e1] rounded-lg px-4 py-2 border border-[#FFD600]/20 focus:outline-none focus:border-[#FFD600]"
+                          accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.png,.zip"
+                        />
+                        {newMaterial.file && (
+                          <p className="text-[#FFD600] text-sm mt-2">Selected: {newMaterial.file.name}</p>
+                        )}
+                      </div>
+                    )}
+
+                    {newMaterial.fileOrUrl === 'url' && (
+                      <div className="mb-4">
+                        <label className="block text-[#e8e6e1] font-semibold mb-2">URL *</label>
+                        <input
+                          type="url"
+                          value={newMaterial.url}
+                          onChange={(e) => setNewMaterial({...newMaterial, url: e.target.value})}
+                          placeholder="https://example.com/resource"
+                          className="w-full bg-[#1a1a1a] text-[#e8e6e1] rounded-lg px-4 py-2 border border-[#FFD600]/20 focus:outline-none focus:border-[#FFD600] focus:ring-2 focus:ring-[#FFD600]/20"
+                        />
+                      </div>
+                    )}
+
+                    {materialError && (
+                      <div className="mb-4 p-4 bg-red-500/20 border border-red-500/50 rounded-lg flex items-start gap-3">
+                        <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+                        <div>
+                          <p className="text-red-400 font-semibold text-sm">Error</p>
+                          <p className="text-red-300 text-sm">{materialError}</p>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="flex gap-3">
+                      <button
+                        type="submit"
+                        disabled={materialLoading}
+                        className="flex-1 btn-3d bg-[#FFD600] text-black font-semibold py-3 px-6 rounded-lg hover:bg-[#FFD600]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                      >
+                        <Upload className="w-5 h-5" />
+                        {materialLoading ? 'Uploading...' : 'Upload Material'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsMaterialModalOpen(false);
+                          setNewMaterial({
+                            title: '',
+                            description: '',
+                            fileOrUrl: 'file',
+                            file: null,
+                            url: ''
+                          });
+                          setMaterialError('');
+                        }}
+                        className="flex-1 btn-3d bg-[#1a1a1a] text-[#e8e6e1] font-semibold py-3 px-6 rounded-lg hover:bg-[#2a2a2a] transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </form>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </AnimatePresence>
       </div>
     </div>
   );

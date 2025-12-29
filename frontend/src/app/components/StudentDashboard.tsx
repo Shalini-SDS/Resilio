@@ -5,7 +5,6 @@ import {
   BookOpen, 
   FileText, 
   Bot, 
-  FolderKanban, 
   TrendingUp, 
   Calendar, 
   User,
@@ -16,7 +15,12 @@ import {
   Brain,
   Trophy,
   Star,
-  Plus
+  Plus,
+  CheckCircle,
+  Send,
+  X,
+  AlertCircle,
+  Eye
 } from 'lucide-react';
 import { GlassCard } from './GlassCard';
 import { TabNavigation } from './TabNavigation';
@@ -41,6 +45,11 @@ export function StudentDashboard({ onLogout, onEnterClassroom, onGoToClasses }: 
   const [profile, setProfile] = useState<any>(null);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [editedProfile, setEditedProfile] = useState<any>(null);
+  const [isSubmissionModalOpen, setIsSubmissionModalOpen] = useState(false);
+  const [selectedAssignment, setSelectedAssignment] = useState<any>(null);
+  const [submissionContent, setSubmissionContent] = useState('');
+  const [submissionLoading, setSubmissionLoading] = useState(false);
+  const [submissionError, setSubmissionError] = useState('');
 
   useEffect(() => {
     fetchData();
@@ -93,11 +102,46 @@ export function StudentDashboard({ onLogout, onEnterClassroom, onGoToClasses }: 
     }
   };
 
+  const handleSubmitAssignment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedAssignment) return;
+    
+    setSubmissionError('');
+    if (!submissionContent.trim()) {
+      setSubmissionError('Please enter your submission content');
+      return;
+    }
+
+    setSubmissionLoading(true);
+    try {
+      await studentAPI.submitAssignment(selectedAssignment._id, {
+        content: submissionContent.trim(),
+        attachments: []
+      });
+      
+      setSubmissionContent('');
+      setIsSubmissionModalOpen(false);
+      setSelectedAssignment(null);
+      
+      const updated = assignments.map(a => 
+        a._id === selectedAssignment._id 
+          ? { ...a, submission: { student: profile?.id, content: submissionContent, submittedAt: new Date() } }
+          : a
+      );
+      setAssignments(updated);
+      
+      alert('✅ Assignment submitted successfully!');
+    } catch (error: any) {
+      setSubmissionError(error.message || 'Failed to submit assignment');
+    } finally {
+      setSubmissionLoading(false);
+    }
+  };
+
   const tabs = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'classroom', label: 'Classroom', icon: BookOpen },
     { id: 'ai-assistant', label: 'AI Assistant', icon: Bot },
-    { id: 'projects', label: 'Projects', icon: FolderKanban },
     { id: 'progress', label: 'Progress & Well-Being', icon: TrendingUp },
     { id: 'schedule', label: 'Schedule', icon: Calendar },
     { id: 'profile', label: 'Profile', icon: User },
@@ -388,6 +432,232 @@ export function StudentDashboard({ onLogout, onEnterClassroom, onGoToClasses }: 
             </motion.div>
           )}
 
+          {activeTab === 'assignments' && (
+            <motion.div
+              key="assignments"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.4 }}
+            >
+              <div className="space-y-6">
+                {assignments.length === 0 ? (
+                  <GlassCard>
+                    <div className="p-12 text-center">
+                      <FileText className="w-16 h-16 text-[#FFD600]/30 mx-auto mb-4" />
+                      <h3 className="text-2xl font-bold text-[#e8e6e1] mb-3">No Assignments Yet</h3>
+                      <p className="text-[#a8a6a1]">Check back soon for assignments from your teachers</p>
+                    </div>
+                  </GlassCard>
+                ) : (
+                  <div className="grid md:grid-cols-2 gap-6">
+                    {assignments.map((assignment, index) => {
+                      const isOverdue = new Date(assignment.dueDate) < new Date();
+                      const isSubmitted = !!assignment.submission;
+                      const isGraded = isSubmitted && assignment.submission.grade;
+                      
+                      return (
+                        <motion.div
+                          key={assignment._id}
+                          initial={{ opacity: 0, scale: 0.9 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ duration: 0.4, delay: index * 0.1 }}
+                        >
+                          <GlassCard>
+                            <div className="p-6">
+                              <div className="flex items-start justify-between mb-4">
+                                <div className="flex-1">
+                                  <h3 className="text-[#e8e6e1] font-semibold mb-2">{assignment.title}</h3>
+                                  <p className="text-[#a8a6a1] text-sm mb-3">{assignment.description}</p>
+                                  <div className="flex flex-wrap gap-1 mb-3">
+                                    <span className="px-2 py-1 bg-[#FFD600]/10 text-[#FFD600] text-xs rounded-full">
+                                      {assignment.course?.title || 'Course'}
+                                    </span>
+                                    <span className={`px-2 py-1 text-xs rounded-full ${
+                                      assignment.type === 'homework' ? 'bg-blue-500/20 text-blue-400' :
+                                      assignment.type === 'quiz' ? 'bg-purple-500/20 text-purple-400' :
+                                      assignment.type === 'project' ? 'bg-green-500/20 text-green-400' :
+                                      'bg-red-500/20 text-red-400'
+                                    }`}>
+                                      {assignment.type}
+                                    </span>
+                                  </div>
+                                </div>
+                                <span className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
+                                  isGraded ? 'bg-green-500/20 text-green-400' :
+                                  isSubmitted ? 'bg-blue-500/20 text-blue-400' :
+                                  isOverdue ? 'bg-red-500/20 text-red-400' :
+                                  'bg-[#FFD600]/20 text-[#FFD600]'
+                                }`}>
+                                  {isGraded ? 'Graded' :
+                                   isSubmitted ? 'Submitted' :
+                                   isOverdue ? 'Overdue' : 'Pending'}
+                                </span>
+                              </div>
+                              
+                              <div className="space-y-3 mb-4">
+                                <div className="flex justify-between text-sm">
+                                  <span className="text-[#a8a6a1]">Due Date:</span>
+                                  <span className={isOverdue && !isSubmitted ? 'text-red-400' : 'text-[#FFD600]'}>
+                                    {new Date(assignment.dueDate).toLocaleDateString()}
+                                  </span>
+                                </div>
+                                <div className="flex justify-between text-sm">
+                                  <span className="text-[#a8a6a1]">Points:</span>
+                                  <span className="text-[#e8e6e1]">{assignment.totalPoints}</span>
+                                </div>
+                                {isSubmitted && (
+                                  <div className="flex justify-between text-sm">
+                                    <span className="text-[#a8a6a1]">Submitted:</span>
+                                    <span className="text-green-400">{new Date(assignment.submission.submittedAt).toLocaleDateString()}</span>
+                                  </div>
+                                )}
+                                {isGraded && (
+                                  <div className="flex justify-between text-sm">
+                                    <span className="text-[#a8a6a1]">Grade:</span>
+                                    <span className="text-green-400 font-bold">{assignment.submission.grade}/{assignment.totalPoints}</span>
+                                  </div>
+                                )}
+                              </div>
+                              
+                              <div className="flex gap-2">
+                                {!isSubmitted && (
+                                  <button 
+                                    onClick={() => {
+                                      setSelectedAssignment(assignment);
+                                      setIsSubmissionModalOpen(true);
+                                    }}
+                                    className="flex-1 btn-3d bg-[#FFD600] text-black font-semibold py-2 px-4 rounded-lg hover:bg-[#FFD600]/90 transition-colors flex items-center justify-center gap-2"
+                                  >
+                                    <Send className="w-4 h-4" />
+                                    Submit
+                                  </button>
+                                )}
+                                {isSubmitted && (
+                                  <button 
+                                    onClick={() => {
+                                      setSelectedAssignment(assignment);
+                                      setSubmissionContent(assignment.submission.content);
+                                      setIsSubmissionModalOpen(true);
+                                    }}
+                                    className="flex-1 btn-3d bg-[#1a1a1a] text-[#e8e6e1] font-semibold py-2 px-4 rounded-lg hover:bg-[#2a2a2a] transition-colors"
+                                  >
+                                    View Submission
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          </GlassCard>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* Submission Modal */}
+              <AnimatePresence>
+                {isSubmissionModalOpen && selectedAssignment && (
+                  <motion.div
+                    key="submission-modal"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+                    onClick={() => setIsSubmissionModalOpen(false)}
+                  >
+                    <motion.div
+                      initial={{ scale: 0.95, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0.95, opacity: 0 }}
+                      onClick={(e) => e.stopPropagation()}
+                      className="bg-[#0a0a0a] border border-[#FFD600]/20 rounded-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+                    >
+                      <div className="flex items-start justify-between mb-6">
+                        <div>
+                          <h2 className="text-2xl font-bold text-[#e8e6e1]">{selectedAssignment.title}</h2>
+                          <p className="text-[#a8a6a1] text-sm mt-1">{selectedAssignment.course?.title}</p>
+                        </div>
+                        <button
+                          onClick={() => setIsSubmissionModalOpen(false)}
+                          className="p-2 hover:bg-[#1a1a1a] rounded-lg transition-colors"
+                        >
+                          <X className="w-5 h-5 text-[#a8a6a1]" />
+                        </button>
+                      </div>
+
+                      <div className="mb-6 p-4 bg-[#1a1a1a] rounded-lg">
+                        <p className="text-[#e8e6e1] text-sm mb-3"><strong>Instructions:</strong></p>
+                        <p className="text-[#a8a6a1] text-sm mb-4">{selectedAssignment.description}</p>
+                        <div className="grid grid-cols-3 gap-4 text-sm">
+                          <div>
+                            <span className="text-[#a8a6a1]">Due Date:</span>
+                            <p className="text-[#FFD600] font-semibold">{new Date(selectedAssignment.dueDate).toLocaleDateString()}</p>
+                          </div>
+                          <div>
+                            <span className="text-[#a8a6a1]">Points:</span>
+                            <p className="text-[#e8e6e1] font-semibold">{selectedAssignment.totalPoints}</p>
+                          </div>
+                          <div>
+                            <span className="text-[#a8a6a1]">Type:</span>
+                            <p className="text-[#e8e6e1] font-semibold capitalize">{selectedAssignment.type}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <form onSubmit={handleSubmitAssignment}>
+                        <div className="mb-6">
+                          <label className="block text-[#e8e6e1] font-semibold mb-3">Your Response *</label>
+                          <textarea
+                            value={submissionContent}
+                            onChange={(e) => setSubmissionContent(e.target.value)}
+                            placeholder="Enter your response, answer, or solution..."
+                            disabled={submissionLoading || !!selectedAssignment.submission}
+                            className="w-full bg-[#1a1a1a] text-[#e8e6e1] rounded-lg px-4 py-3 border border-[#FFD600]/20 focus:outline-none focus:border-[#FFD600] focus:ring-2 focus:ring-[#FFD600]/20 min-h-40 disabled:opacity-50 disabled:cursor-not-allowed"
+                          />
+                        </div>
+
+                        {submissionError && (
+                          <div className="mb-6 p-4 bg-red-500/20 border border-red-500/50 rounded-lg flex items-start gap-3">
+                            <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+                            <div>
+                              <p className="text-red-400 font-semibold text-sm">Error</p>
+                              <p className="text-red-300 text-sm">{submissionError}</p>
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="flex gap-3">
+                          {!selectedAssignment.submission && (
+                            <button
+                              type="submit"
+                              disabled={submissionLoading}
+                              className="flex-1 btn-3d bg-[#FFD600] text-black font-semibold py-3 px-6 rounded-lg hover:bg-[#FFD600]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                            >
+                              <Send className="w-5 h-5" />
+                              {submissionLoading ? 'Submitting...' : 'Submit Assignment'}
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIsSubmissionModalOpen(false);
+                              setSubmissionContent('');
+                              setSubmissionError('');
+                            }}
+                            className="flex-1 btn-3d bg-[#1a1a1a] text-[#e8e6e1] font-semibold py-3 px-6 rounded-lg hover:bg-[#2a2a2a] transition-colors"
+                          >
+                            {selectedAssignment.submission ? 'Close' : 'Cancel'}
+                          </button>
+                        </div>
+                      </form>
+                    </motion.div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+          )}
+
           {activeTab === 'classroom' && (
             <motion.div
               key="classroom"
@@ -472,78 +742,6 @@ export function StudentDashboard({ onLogout, onEnterClassroom, onGoToClasses }: 
                     </div>
                   </GlassCard>
                 </div>
-              </div>
-            </motion.div>
-          )}
-
-          {activeTab === 'projects' && (
-            <motion.div
-              key="projects"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.4 }}
-            >
-              <div className="grid md:grid-cols-2 gap-6 mb-8">
-                {assignments.filter(a => a.type === 'project').length === 0 ? (
-                  <div className="col-span-2 text-center py-12">
-                    <p className="text-[#a8a6a1]">No projects found.</p>
-                  </div>
-                ) : assignments.filter(a => a.type === 'project').map((project, index) => (
-                  <motion.div
-                    key={project._id}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.4, delay: index * 0.1 }}
-                  >
-                    <GlassCard>
-                      <div className="p-6">
-                        <div className="flex items-start justify-between mb-4">
-                          <div className="flex-1">
-                            <h3 className="text-[#e8e6e1] font-semibold mb-2">{project.title}</h3>
-                            <p className="text-[#a8a6a1] text-sm mb-3">{project.description}</p>
-                            <div className="flex flex-wrap gap-1 mb-3">
-                              <span className="px-2 py-1 bg-[#FFD600]/10 text-[#FFD600] text-xs rounded-full">
-                                {project.course?.title || project.subject}
-                              </span>
-                            </div>
-                          </div>
-                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                            project.submission?.grade ? 'bg-green-500/20 text-green-400' :
-                            project.submission ? 'bg-blue-500/20 text-blue-400' :
-                            'bg-[#FFD600]/20 text-[#FFD600]'
-                          }`}>
-                            {project.submission?.grade ? 'Graded' :
-                             project.submission ? 'Submitted' : 'Pending'}
-                          </span>
-                        </div>
-                        
-                        <div className="space-y-3 mb-4">
-                          <div className="flex justify-between text-sm">
-                            <span className="text-[#a8a6a1]">Due Date:</span>
-                            <span className="text-[#FFD600]">{new Date(project.dueDate).toLocaleDateString()}</span>
-                          </div>
-                          <div className="flex justify-between text-sm">
-                            <span className="text-[#a8a6a1]">Points:</span>
-                            <span className="text-[#e8e6e1]">{project.totalPoints}</span>
-                          </div>
-                          {project.submission?.grade && (
-                            <div className="flex justify-between text-sm">
-                              <span className="text-[#a8a6a1]">Grade:</span>
-                              <span className="text-green-400 font-bold">{project.submission.grade}/{project.totalPoints}</span>
-                            </div>
-                          )}
-                        </div>
-                        
-                        <div className="flex gap-2">
-                          <button className="flex-1 btn-3d bg-[#FFD600] text-black font-semibold py-2 px-4 rounded-lg hover:bg-[#FFD600]/90 transition-colors">
-                            {project.submission ? 'View Submission' : 'Start Project'}
-                          </button>
-                        </div>
-                      </div>
-                    </GlassCard>
-                  </motion.div>
-                ))}
               </div>
             </motion.div>
           )}

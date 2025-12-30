@@ -1,5 +1,5 @@
-import { useState, useRef } from 'react';
-import { Bot, User, Send, Paperclip, FileUp } from 'lucide-react';
+import { useState } from 'react';
+import { Bot, User, Send } from 'lucide-react';
 import { GlassCard } from './GlassCard';
 import { chatAPI } from '../api';
 
@@ -77,13 +77,7 @@ export function ChatComponent({ title, placeholder, role }: ChatComponentProps) 
       
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
-<<<<<<< HEAD
         text: errorText,
-=======
-        text: error.message === 'Failed to send message' 
-          ? 'Connection error: Please ensure the backend server is running on port 5000.'
-          : `AI Service Notice: ${error.message}`,
->>>>>>> 6d788d8537408203b3ed942a31960d7c4700437b
         isAI: true,
         timestamp: new Date(),
       };
@@ -151,12 +145,13 @@ export function ChatComponent({ title, placeholder, role }: ChatComponentProps) 
             type="text"
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
-            onKeyPress={handleKeyPress}
+            onKeyDown={handleKeyPress}
             placeholder={placeholder}
             disabled={isLoading}
             className="flex-1 bg-[#1a1a1a] text-[#e8e6e1] rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#FFD600] disabled:opacity-50"
           />
           <button
+            type="button"
             onClick={handleSendMessage}
             disabled={!inputMessage.trim() || isLoading}
             className="btn-3d bg-[#FFD600] text-black font-semibold py-3 px-6 rounded-lg hover:bg-[#FFD600]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"

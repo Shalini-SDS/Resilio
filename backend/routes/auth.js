@@ -4,8 +4,6 @@ const { body, validationResult } = require('express-validator');
 const User = require('../models/User');
 const { authenticate } = require('../middleware/auth');
 
-const { authenticate } = require('../middleware/auth');
-
 const router = express.Router();
 
 // Register user
@@ -157,7 +155,6 @@ router.post('/login', [
 router.get('/profile', authenticate, async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select('-password');
-<<<<<<< HEAD
     
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
@@ -173,12 +170,6 @@ router.get('/profile', authenticate, async (req, res) => {
       status: user.status,
       createdAt: user.createdAt
     });
-=======
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-    res.json(user);
->>>>>>> 6d788d8537408203b3ed942a31960d7c4700437b
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });

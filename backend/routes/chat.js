@@ -1,17 +1,31 @@
 const express = require('express');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
-<<<<<<< HEAD
 const OpenAI = require('openai');
 const axios = require('axios');
 const { authenticate } = require('../middleware/auth');
 const router = express.Router();
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const geminiModel = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+// Initialize AI providers conditionally
+let geminiModel;
+if (process.env.GEMINI_API_KEY && !process.env.GEMINI_API_KEY.includes('replace_with_your')) {
+  try {
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    geminiModel = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+  } catch (e) {
+    console.warn('Failed to initialize Gemini:', e.message);
+  }
+}
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+let openai;
+if (process.env.OPENAI_API_KEY && !process.env.OPENAI_API_KEY.includes('replace_with_your')) {
+  try {
+    openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+  } catch (e) {
+    console.warn('Failed to initialize OpenAI:', e.message);
+  }
+}
 
 // Helper function to call Hugging Face Inference API (Free alternative)
 async function callHuggingFaceAPI(message, systemPrompt) {
@@ -73,11 +87,6 @@ async function callDemoAPI(message, role) {
   return responses.default;
 }
 
-=======
-const { authenticate } = require('../middleware/auth');
-const router = express.Router();
-
->>>>>>> 6d788d8537408203b3ed942a31960d7c4700437b
 // Chat endpoint for students and teachers
 router.post('/chat', async (req, res) => {
   try {
@@ -87,31 +96,15 @@ router.post('/chat', async (req, res) => {
       return res.status(400).json({ message: 'Message is required' });
     }
 
-<<<<<<< HEAD
     let systemPrompt = '';
     if (role === 'student') {
       systemPrompt = 'You are an AI study assistant helping students with their learning. Provide clear, helpful explanations and encourage understanding. Keep responses concise but informative.';
-=======
-    if (!process.env.GEMINI_API_KEY) {
-      console.error('GEMINI_API_KEY is not configured');
-      return res.status(500).json({ message: 'AI configuration error' });
-    }
-
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-
-    // Create system prompt based on role
-    let systemPrompt = '';
-    if (role === 'student') {
-      systemPrompt = 'You are an AI study assistant helping students with their learning. Provide clear, helpful explanations and encourage understanding. If the user asks for code, ensure the code is well-formatted with correct indentation.';
->>>>>>> 6d788d8537408203b3ed942a31960d7c4700437b
     } else if (role === 'teacher') {
       systemPrompt = 'You are an AI teaching assistant helping teachers with lesson planning, student assessment, and educational strategies. Provide professional, educational guidance.';
     } else {
       systemPrompt = 'You are a helpful AI assistant for educational purposes.';
     }
 
-<<<<<<< HEAD
     let aiResponse;
 
     try {
@@ -121,6 +114,7 @@ router.post('/chat', async (req, res) => {
       console.log('⚠️ Hugging Face API failed, trying OpenAI...');
       
       try {
+        if (!openai) throw new Error('OpenAI not configured');
         const completion = await openai.chat.completions.create({
           model: 'gpt-3.5-turbo',
           messages: [
@@ -135,6 +129,7 @@ router.post('/chat', async (req, res) => {
         console.log('⚠️ OpenAI API failed, trying Gemini...');
         
         try {
+          if (!geminiModel) throw new Error('Gemini not configured');
           const prompt = `${systemPrompt}\n\nUser: ${message}`;
           const result = await geminiModel.generateContent(prompt);
           const response = await result.response;
@@ -146,18 +141,10 @@ router.post('/chat', async (req, res) => {
         }
       }
     }
-=======
-    const prompt = `${systemPrompt}\n\nUser: ${message}\nAI:`;
-
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const aiResponse = response.text();
->>>>>>> 6d788d8537408203b3ed942a31960d7c4700437b
 
     res.json({ response: aiResponse });
   } catch (error) {
     console.error('AI Chat Error:', error.message);
-<<<<<<< HEAD
     
     if (error.message.includes('429') || error.message.includes('quota') || error.message.includes('rate')) {
       return res.status(429).json({ 
@@ -167,9 +154,6 @@ router.post('/chat', async (req, res) => {
     }
     
     res.status(500).json({ message: 'Failed to get AI response', error: error.message });
-=======
-    res.status(500).json({ message: 'Failed to get AI response' });
->>>>>>> 6d788d8537408203b3ed942a31960d7c4700437b
   }
 });
 

@@ -7,17 +7,10 @@ import { authAPI } from '../api';
 interface AdminLoginProps {
   onLogin: () => void;
   onBack: () => void;
-<<<<<<< HEAD
   onSignup: () => void;
 }
 
 export function AdminLogin({ onLogin, onBack, onSignup }: AdminLoginProps) {
-=======
-  onSignUp: () => void;
-}
-
-export function AdminLogin({ onLogin, onBack, onSignUp }: AdminLoginProps) {
->>>>>>> 6d788d8537408203b3ed942a31960d7c4700437b
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -30,19 +23,11 @@ export function AdminLogin({ onLogin, onBack, onSignUp }: AdminLoginProps) {
     setError(null);
 
     try {
-<<<<<<< HEAD
       await authAPI.login({ email, password });
       setIsLoading(false);
       onLogin();
     } catch (err: any) {
       setError(err.message || 'Login failed');
-=======
-      await authAPI.login(email, password);
-      onLogin();
-    } catch (err: any) {
-      setError(err.message || 'Invalid email or password');
-    } finally {
->>>>>>> 6d788d8537408203b3ed942a31960d7c4700437b
       setIsLoading(false);
     }
   };
@@ -145,7 +130,6 @@ export function AdminLogin({ onLogin, onBack, onSignUp }: AdminLoginProps) {
                 </button>
               </form>
 
-<<<<<<< HEAD
               <div className="mt-6 text-center text-sm">
                 <p className="text-[#a8a6a1]">
                   Don't have an account?{' '}
@@ -154,16 +138,6 @@ export function AdminLogin({ onLogin, onBack, onSignUp }: AdminLoginProps) {
                     className="text-[#FF3333] font-semibold hover:underline"
                   >
                     Sign up
-=======
-              <div className="mt-6 text-center">
-                <p className="text-[#a8a6a1] text-sm">
-                  Don't have an account?{' '}
-                  <button
-                    onClick={onSignUp}
-                    className="text-[#FF3333] hover:text-[#FF5555] font-semibold transition-colors"
-                  >
-                    Sign Up
->>>>>>> 6d788d8537408203b3ed942a31960d7c4700437b
                   </button>
                 </p>
               </div>

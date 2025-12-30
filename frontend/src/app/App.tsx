@@ -5,25 +5,17 @@ import { LoginPage } from './components/LoginPage';
 import { StudentLogin } from './components/StudentLogin';
 import { TeacherLogin } from './components/TeacherLogin';
 import { AdminLogin } from './components/AdminLogin';
-import { SignupPage } from './components/SignupPage';
+import { SignUpPage } from './components/SignUpPage';
 import { StudentDashboard } from './components/StudentDashboard';
 import { TeacherDashboard } from './components/TeacherDashboard';
 import { AdminDashboard } from './components/AdminDashboard';
-<<<<<<< HEAD
 import { ClassroomManagement } from './components/ClassroomManagement';
 import { ClassroomView } from './components/ClassroomView';
 import { StudentClasses } from './components/StudentClasses';
-=======
-import { SignUpPage } from './components/SignUpPage';
->>>>>>> 6d788d8537408203b3ed942a31960d7c4700437b
 import { GlitterEffect } from './components/GlitterEffect';
 import { clearAuthToken } from './api';
 
-<<<<<<< HEAD
 type View = 'landing' | 'login' | 'signup' | 'student-login' | 'teacher-login' | 'admin-login' | 'student' | 'teacher' | 'admin' | 'classroom-management' | 'classroom-view' | 'student-classes';
-=======
-type View = 'landing' | 'login' | 'signup' | 'student-login' | 'teacher-login' | 'admin-login' | 'student' | 'teacher' | 'admin';
->>>>>>> 6d788d8537408203b3ed942a31960d7c4700437b
 type Role = 'student' | 'teacher' | 'admin' | null;
 
 export default function App() {
@@ -35,11 +27,7 @@ export default function App() {
     setCurrentView('login');
   };
 
-<<<<<<< HEAD
   const handleSignup = () => {
-=======
-  const handleSignUpClick = () => {
->>>>>>> 6d788d8537408203b3ed942a31960d7c4700437b
     setCurrentView('signup');
   };
 
@@ -128,22 +116,7 @@ export default function App() {
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
           >
-<<<<<<< HEAD
             <LoginPage onRoleSelect={handleRoleSelect} onSignup={handleSignup} />
-=======
-            <LoginPage onRoleSelect={handleRoleSelect} />
-            <div className="absolute bottom-12 left-0 right-0 text-center z-20">
-              <p className="text-[#a8a6a1]">
-                Don't have an account?{' '}
-                <button
-                  onClick={handleSignUpClick}
-                  className="text-[#FFD600] hover:text-[#FFB800] font-semibold transition-colors"
-                >
-                  Sign Up Now
-                </button>
-              </p>
-            </div>
->>>>>>> 6d788d8537408203b3ed942a31960d7c4700437b
           </motion.div>
         )}
 
@@ -155,11 +128,7 @@ export default function App() {
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
           >
-<<<<<<< HEAD
-            <SignupPage onSignupSuccess={handleSignupSuccess} onBack={() => setCurrentView('login')} />
-=======
-            <SignUpPage onSignUp={handleSignUpSuccess} onBack={() => setCurrentView('login')} />
->>>>>>> 6d788d8537408203b3ed942a31960d7c4700437b
+            <SignUpPage onSignUp={handleSignupSuccess} onBack={() => setCurrentView('login')} />
           </motion.div>
         )}
 
@@ -171,15 +140,11 @@ export default function App() {
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
           >
-<<<<<<< HEAD
             <StudentLogin 
               onLogin={handleLoginSuccess} 
               onBack={handleBackToRoleSelect} 
               onSignup={handleSignup}
             />
-=======
-            <StudentLogin onLogin={handleLoginSuccess} onBack={handleBackToRoleSelect} onSignUp={handleSignUpClick} />
->>>>>>> 6d788d8537408203b3ed942a31960d7c4700437b
           </motion.div>
         )}
 
@@ -191,15 +156,11 @@ export default function App() {
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
           >
-<<<<<<< HEAD
             <TeacherLogin 
               onLogin={handleLoginSuccess} 
               onBack={handleBackToRoleSelect} 
               onSignup={handleSignup}
             />
-=======
-            <TeacherLogin onLogin={handleLoginSuccess} onBack={handleBackToRoleSelect} onSignUp={handleSignUpClick} />
->>>>>>> 6d788d8537408203b3ed942a31960d7c4700437b
           </motion.div>
         )}
 
@@ -211,15 +172,11 @@ export default function App() {
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
           >
-<<<<<<< HEAD
             <AdminLogin 
               onLogin={handleLoginSuccess} 
               onBack={handleBackToRoleSelect} 
               onSignup={handleSignup}
             />
-=======
-            <AdminLogin onLogin={handleLoginSuccess} onBack={handleBackToRoleSelect} onSignUp={handleSignUpClick} />
->>>>>>> 6d788d8537408203b3ed942a31960d7c4700437b
           </motion.div>
         )}
 

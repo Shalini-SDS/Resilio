@@ -114,12 +114,17 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 3001;
-console.log(`Attempting to start server on port ${PORT}...`);
-app.listen(PORT, () => {
-  console.log(`✅ Server successfully listening on port ${PORT}`);
-  console.log(`Health check available at http://localhost:${PORT}/api/health`);
-}).on('error', (err) => {
-  console.error('❌ Server failed to start:', err);
-  process.exit(1);
-});
+
+if (require.main === module) {
+  console.log(`Attempting to start server on port ${PORT}...`);
+  app.listen(PORT, () => {
+    console.log(`✅ Server successfully listening on port ${PORT}`);
+    console.log(`Health check available at http://localhost:${PORT}/api/health`);
+  }).on('error', (err) => {
+    console.error('❌ Server failed to start:', err);
+    process.exit(1);
+  });
+}
+
+module.exports = app;
 

@@ -7,9 +7,22 @@
     "backend": "cd backend && npm run dev",
     "frontend": "cd frontend && npm run dev",
     "dev": "npm run all",
-    "all": "concurrently \"npm run backend\" \"npm run frontend\""
+    "all": "concurrently \"npm run backend\" \"npm run frontend\"",
+    "build": "cd frontend && npm install && npm run build && cd .. && rm -rf public && mkdir public && cp -rf frontend/dist/* public/"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-validator": "^7.0.1",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.0.3",
+    "multer": "^2.0.2",
+    "openai": "^4.0.0"
   }
 }

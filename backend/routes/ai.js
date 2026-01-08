@@ -200,21 +200,33 @@ router.get('/schedule/:studentId', [authenticate, requireStudent], async (req, r
     - Fill gaps with "Self-Study", "Revision", or "Project Work" targeting specific upcoming assignments.
     - Tone: Helpful and supportive.`;
 
-    const response = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
-      model: 'llama-3.3-70b-versatile',
-      messages: [
-        { role: 'system', content: 'You are a scheduling assistant. Output valid JSON only.' },
-        { role: 'user', content: prompt }
-      ],
-      response_format: { type: "json_object" },
-      max_tokens: 1024,
-      temperature: 0.5,
-    }, {
-      headers: {
-        'Authorization': `Bearer ${GROQ_API_KEY}`,
-        'Content-Type': 'application/json',
-      }
-    });
+    // Fail early with a helpful message if AI key isn't configured
+    if (!GROQ_API_KEY || GROQ_API_KEY.includes('replace_with_your')) {
+      console.error('AI schedule request blocked: GROQ_API_KEY not configured');
+      return res.status(500).json({ message: 'AI scheduling service is not configured. Please set GROQ_API_KEY on the backend.' });
+    }
+
+    let response;
+    try {
+      response = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
+        model: 'llama-3.3-70b-versatile',
+        messages: [
+          { role: 'system', content: 'You are a scheduling assistant. Output valid JSON only.' },
+          { role: 'user', content: prompt }
+        ],
+        response_format: { type: "json_object" },
+        max_tokens: 1024,
+        temperature: 0.5,
+      }, {
+        headers: {
+          'Authorization': `Bearer ${GROQ_API_KEY}`,
+          'Content-Type': 'application/json',
+        }
+      });
+    } catch (aiErr) {
+      console.error('AI API call failed for schedule:', aiErr.response?.status, aiErr.response?.data || aiErr.message);
+      return res.status(502).json({ message: 'AI service error when generating schedule' });
+    }
 
     let rawContent = response.data.choices[0].message.content;
     let scheduleData;

@@ -31,12 +31,28 @@ export function AiSchedule({ studentId }: AiScheduleProps) {
         }
       });
 
-      if (!response.ok) throw new Error('Failed to generate schedule');
+      if (response.status === 401) {
+        setError('Please sign in to generate your schedule.');
+        return;
+      }
+
+      if (!response.ok) {
+        let msg = 'Failed to generate your personalized schedule. Please try again later.';
+        try {
+          const errBody = await response.json();
+          if (errBody && errBody.message) msg = errBody.message;
+        } catch (e) {
+          // ignore parse error
+        }
+        setError(msg);
+        return;
+      }
+
       const data = await response.json();
       setSchedule(data.schedule || []);
     } catch (err: any) {
       console.error(err);
-      setError("Failed to generate your personalized schedule. Please try again later.");
+      setError(err.message || "Failed to generate your personalized schedule. Please try again later.");
     } finally {
       setLoading(false);
     }

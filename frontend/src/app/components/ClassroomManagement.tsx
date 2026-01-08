@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { ArrowLeft, Users, FileText, MessageSquare, BarChart3, Copy, Check, Trash2, X } from 'lucide-react';
 import { GlassCard } from './GlassCard';
-import { courseAPI, teacherAPI } from '../api';
+import { courseAPI, teacherAPI, BACKEND_URL } from '../api';
 
 interface ClassroomManagementProps {
   course: any;
@@ -517,7 +517,7 @@ export function ClassroomManagement({ course, onBack, onLogout }: ClassroomManag
                         </div>
                         <div className="flex gap-2">
                           <a 
-                            href={material.fileUrl.startsWith('/') ? `http://localhost:3001${material.fileUrl}` : material.fileUrl} 
+                            href={material.fileUrl.startsWith('/') ? `${BACKEND_URL}${material.fileUrl}` : material.fileUrl} 
                             target="_blank" 
                             rel="noopener noreferrer"
                             className="btn-3d bg-[#FFD600]/10 text-[#FFD600] font-semibold py-2 px-4 rounded-lg hover:bg-[#FFD600]/20 transition-colors"

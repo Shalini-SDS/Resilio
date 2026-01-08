@@ -103,6 +103,8 @@ NODE_ENV=development
 PORT=3001
 MONGODB_URI=mongodb://localhost:27017/resolio
 JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
+# Optional/Required for AI features (schedule, insights). Set to your Groq API key:
+# GROQ_API_KEY=sk-xxxxx
 ```
 
 ### Database Models

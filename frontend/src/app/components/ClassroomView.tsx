@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { ArrowLeft, FileText, Calendar, User, Bell, BookOpen, CheckCircle } from 'lucide-react';
 import { GlassCard } from './GlassCard';
-import { courseAPI } from '../api';
+import { courseAPI, BACKEND_URL } from '../api';
 
 interface ClassroomViewProps {
   course: any;
@@ -302,7 +302,7 @@ export function ClassroomView({ course, onBack, onLogout }: ClassroomViewProps) 
                           </p>
                         </div>
                         <a 
-                          href={material.fileUrl.startsWith('/') ? `http://localhost:3001${material.fileUrl}` : material.fileUrl} 
+                          href={material.fileUrl.startsWith('/') ? `${BACKEND_URL}${material.fileUrl}` : material.fileUrl} 
                           target="_blank" 
                           rel="noopener noreferrer"
                           className="btn-3d bg-[#FFD600]/10 text-[#FFD600] font-semibold py-2 px-4 rounded-lg hover:bg-[#FFD600]/20 transition-colors ml-4"

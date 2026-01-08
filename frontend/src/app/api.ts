@@ -1,5 +1,8 @@
 // API utility functions
-const API_BASE_URL = '/api';
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
+const API_BASE_URL = `${BACKEND_URL}/api`;
+
+export { BACKEND_URL };
 
 // Auth token management
 let authToken: string | null = null;

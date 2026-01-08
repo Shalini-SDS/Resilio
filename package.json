@@ -8,7 +8,8 @@
     "frontend": "cd frontend && npm run dev",
     "dev": "npm run all",
     "all": "concurrently \"npm run backend\" \"npm run frontend\"",
-    "build": "cd frontend && npm install && npm run build && cd .. && if exist public rd /s /q public && mkdir public && xcopy /e /y frontend\\dist\\* public\\"
+    "build": "cd frontend && npm install && npm run build",
+    "build-vercel": "cd frontend && npm install && npm run build && cd .. && rm -rf public && mkdir public && cp -r frontend/dist/* public/"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

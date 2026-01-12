@@ -24,7 +24,7 @@ export function SignUpPage({ onSignUp, onBack }: SignUpPageProps) {
     setError(null);
 
     try {
-      await authAPI.register(name, email, password, role);
+      await authAPI.register({ name, email, password, role });
       onSignUp(role);
     } catch (err: any) {
       setError(err.message || 'Registration failed');

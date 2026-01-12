@@ -1,5 +1,6 @@
 // API utility functions
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
+// Accept either VITE_BACKEND_URL or the older VITE_API_URL to avoid deploy-time mismatches
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_API_URL || 'http://localhost:3001';
 const API_BASE_URL = `${BACKEND_URL}/api`;
 
 export { BACKEND_URL };

@@ -158,6 +158,34 @@ EXPOSE 3001
 CMD ["npm", "start"]
 ```
 
+### Deploying to Render ✅
+Render can host the Express app as a standard long-running service.
+
+1. Create a new **Web Service** on Render and connect your GitHub repo.
+2. Set the **Build Command** to: `cd backend && npm install`
+3. Set the **Start Command** to: `cd backend && npm start`
+4. Add environment variables in the Render dashboard (do NOT commit `.env`):
+   - `MONGODB_URI` (your production DB)
+   - `JWT_SECRET`
+   - Any API keys used by your app (OPENAI_API_KEY, etc.)
+5. Render will provide a `PORT` env var; the server uses `process.env.PORT` automatically.
+
+> Notes: uploads to the local filesystem are ephemeral on most hosts; use cloud storage (S3, Azure Blob) for persistent files.
+
+### Deploying to Vercel (Serverless API) ✅
+Vercel works best with serverless functions. We expose the Express app via API functions in `/api` so your existing routes are available under `/api/*`.
+
+1. Ensure the project is connected to Vercel (link your GitHub repo in Vercel).
+2. In the Vercel dashboard, go to your Project -> Settings -> Environment Variables and add the same variables as above (MONGODB_URI, JWT_SECRET, OPENAI_API_KEY, etc.).
+3. Vercel will automatically install dependencies from the root `package.json` and expose `/api/*` endpoints using the files in the `/api` folder (already included in the repository).
+
+> Important: Serverless functions have limited local disk access and short execution timeouts. For file uploads or long-running jobs, use an external storage or background job service.
+
+### Common deployment tips
+- Do NOT commit `.env` to Git. Use provider-specific environment variable management.
+- Use a managed MongoDB (Atlas) and whitelist the hosting provider's IPs or use SRV connection strings.
+- For CI/CD, add health-checks to ensure the service is responding (`/api/health`).
+
 ## 🐛 Troubleshooting
 
 ### MongoDB Connection Issues

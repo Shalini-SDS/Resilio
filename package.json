@@ -2,6 +2,9 @@
   "name": "resolio-monorepo",
   "version": "1.0.0",
   "description": "Monorepo for Resolio educational platform",
+  "engines": {
+    "node": "18.x"
+  },
   "scripts": {
     "install-all": "npm install && cd backend && npm install && cd ../frontend && npm install",
     "backend": "cd backend && npm run dev",
